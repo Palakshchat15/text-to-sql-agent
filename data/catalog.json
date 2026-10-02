@@ -1,0 +1,2498 @@
+[
+ {
+  "schema": "flight",
+  "table": "dim_airport",
+  "fq": "flight.dim_airport",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "Airports seen as origin or destination, with OurAirports coordinates.",
+  "rows": 335,
+  "columns": [
+   {
+    "name": "airport_code",
+    "type": "VARCHAR",
+    "description": "Three-letter IATA airport code, e.g. ATL, JFK. Unique key.",
+    "samples": [
+     "ABE",
+     "CAK",
+     "CLT"
+    ]
+   },
+   {
+    "name": "airport_name",
+    "type": "VARCHAR",
+    "description": "Airport name.",
+    "samples": [
+     "Kodiak Airport",
+     "King Salmon Airport",
+     "Brunswick Golden Isles Airport"
+    ]
+   },
+   {
+    "name": "city_name",
+    "type": "VARCHAR",
+    "description": "City served.",
+    "samples": [
+     "King Salmon, AK",
+     "Brunswick, GA",
+     "Bozeman, MT"
+    ]
+   },
+   {
+    "name": "state_code",
+    "type": "VARCHAR",
+    "description": "Two-letter US state code, e.g. CA, TX.",
+    "samples": [
+     "SD",
+     "CA",
+     "ME"
+    ]
+   },
+   {
+    "name": "latitude",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     32.4113,
+     41.9386,
+     33.5629
+    ]
+   },
+   {
+    "name": "longitude",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     -85.5496,
+     -116.223,
+     -71.0079
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "dim_carrier",
+  "fq": "flight.dim_carrier",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "Reporting carriers (names from the carriers seed).",
+  "rows": 15,
+  "columns": [
+   {
+    "name": "carrier_code",
+    "type": "VARCHAR",
+    "description": "Two-character airline code, e.g. AA, DL, WN. Unique key.",
+    "samples": [
+     "OO",
+     "AA",
+     "HA"
+    ]
+   },
+   {
+    "name": "carrier_name",
+    "type": "VARCHAR",
+    "description": "Airline name, e.g. 'Delta Air Lines'.",
+    "samples": [
+     "Endeavor Air",
+     "JetBlue Airways",
+     "Alaska Airlines"
+    ]
+   },
+   {
+    "name": "scheduled_flights",
+    "type": "BIGINT",
+    "description": "Number of scheduled flights of the carrier in the data.",
+    "samples": [
+     25473,
+     80504,
+     66654
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "fact_flights",
+  "fq": "flight.fact_flights",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "One row per scheduled flight, including cancelled and diverted flights.",
+  "rows": 2240444,
+  "columns": [
+   {
+    "name": "flight_key",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "bc6469f7aebab733514a6a74449b47d2",
+     "d3ac8391b95ab548bbe1fdcef025c3a1",
+     "dbaa98ca97eefaeda824841959ab55c0"
+    ]
+   },
+   {
+    "name": "flight_date",
+    "type": "DATE",
+    "description": "Scheduled flight date (2024-01-01 to 2024-04-30).",
+    "samples": [
+     "2024-01-14",
+     "2024-01-27",
+     "2024-02-10"
+    ]
+   },
+   {
+    "name": "flight_year",
+    "type": "INTEGER",
+    "description": "",
+    "samples": [
+     2024
+    ]
+   },
+   {
+    "name": "flight_month",
+    "type": "INTEGER",
+    "description": "",
+    "samples": [
+     3,
+     2,
+     1
+    ]
+   },
+   {
+    "name": "day_of_week",
+    "type": "INTEGER",
+    "description": "Day of week, 1 = Monday ... 7 = Sunday.",
+    "samples": [
+     1,
+     5,
+     3
+    ]
+   },
+   {
+    "name": "carrier_code",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "OO",
+     "AA",
+     "9E"
+    ]
+   },
+   {
+    "name": "origin_airport_code",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "GTR",
+     "IAH",
+     "DDC"
+    ]
+   },
+   {
+    "name": "dest_airport_code",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "MYR",
+     "SRQ",
+     "DCA"
+    ]
+   },
+   {
+    "name": "route",
+    "type": "VARCHAR",
+    "description": "Origin-destination pair as text, e.g. 'JFK-LAX'.",
+    "samples": [
+     "DCA-STL",
+     "DCA-DFW",
+     "DCA-RSW"
+    ]
+   },
+   {
+    "name": "flight_number",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "688",
+     "4327",
+     "4658"
+    ]
+   },
+   {
+    "name": "tail_number",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "N215WN",
+     "N949WN",
+     "N8832H"
+    ]
+   },
+   {
+    "name": "dep_hour",
+    "type": "INTEGER",
+    "description": "Scheduled departure hour (0-23, local time).",
+    "samples": [
+     0,
+     11,
+     16
+    ]
+   },
+   {
+    "name": "arr_hour",
+    "type": "INTEGER",
+    "description": "",
+    "samples": [
+     15,
+     22,
+     11
+    ]
+   },
+   {
+    "name": "distance_miles",
+    "type": "INTEGER",
+    "description": "Flight distance in miles.",
+    "samples": [
+     397,
+     414,
+     2762
+    ]
+   },
+   {
+    "name": "crs_elapsed_minutes",
+    "type": "INTEGER",
+    "description": "",
+    "samples": [
+     166,
+     181,
+     75
+    ]
+   },
+   {
+    "name": "flight_status",
+    "type": "VARCHAR",
+    "description": "One of 'On time', 'Delayed 15+ min', 'Cancelled', 'Diverted'. Allowed values: On time, Delayed 15+ min, Cancelled, Diverted.",
+    "samples": [
+     "Cancelled",
+     "On time",
+     "Delayed 15+ min"
+    ]
+   },
+   {
+    "name": "is_cancelled",
+    "type": "BOOLEAN",
+    "description": "True if the flight was cancelled.",
+    "samples": [
+     false,
+     true
+    ]
+   },
+   {
+    "name": "is_diverted",
+    "type": "BOOLEAN",
+    "description": "True if the flight was diverted.",
+    "samples": [
+     false,
+     true
+    ]
+   },
+   {
+    "name": "cancellation_reason",
+    "type": "VARCHAR",
+    "description": "Carrier, Weather, National Air System (NULL if not cancelled).",
+    "samples": [
+     "Weather",
+     "Carrier",
+     "National Air System"
+    ]
+   },
+   {
+    "name": "is_delayed_15",
+    "type": "INTEGER",
+    "description": "1 if arrival delay >= 15 minutes, 0 otherwise; NULL for cancelled or diverted flights.",
+    "samples": [
+     0,
+     1
+    ]
+   },
+   {
+    "name": "dep_delay_minutes",
+    "type": "INTEGER",
+    "description": "Departure delay in minutes (negative = early).",
+    "samples": [
+     14,
+     -5,
+     26
+    ]
+   },
+   {
+    "name": "arr_delay_minutes",
+    "type": "INTEGER",
+    "description": "Arrival delay in minutes (negative = early); NULL for cancelled/diverted.",
+    "samples": [
+     55,
+     -3,
+     -13
+    ]
+   },
+   {
+    "name": "carrier_delay_minutes",
+    "type": "INTEGER",
+    "description": "Minutes of delay attributed to the carrier.",
+    "samples": [
+     85,
+     165,
+     54
+    ]
+   },
+   {
+    "name": "weather_delay_minutes",
+    "type": "INTEGER",
+    "description": "Minutes of delay attributed to weather.",
+    "samples": [
+     42,
+     70,
+     159
+    ]
+   },
+   {
+    "name": "nas_delay_minutes",
+    "type": "INTEGER",
+    "description": "Minutes of delay attributed to the National Air System.",
+    "samples": [
+     32,
+     15,
+     81
+    ]
+   },
+   {
+    "name": "security_delay_minutes",
+    "type": "INTEGER",
+    "description": "Minutes of delay attributed to security.",
+    "samples": [
+     5,
+     9,
+     17
+    ]
+   },
+   {
+    "name": "late_aircraft_delay_minutes",
+    "type": "INTEGER",
+    "description": "Minutes of delay caused by a late incoming aircraft.",
+    "samples": [
+     70,
+     42,
+     170
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "mart_delay_causes_by_month",
+  "fq": "flight.mart_delay_causes_by_month",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "Total delay minutes per month and cause (Carrier, Weather, National Air System, Security, Late Aircraft).",
+  "rows": 20,
+  "columns": [
+   {
+    "name": "flight_month",
+    "type": "INTEGER",
+    "description": "",
+    "samples": [
+     1,
+     4,
+     3
+    ]
+   },
+   {
+    "name": "month_name",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Mar",
+     "Feb",
+     "Jan"
+    ]
+   },
+   {
+    "name": "cause",
+    "type": "VARCHAR",
+    "description": "Delay cause: Carrier, Weather, National Air System, Security, Late Aircraft. Allowed values: Carrier, Weather, National Air System, Security, Late Aircraft.",
+    "samples": [
+     "Carrier",
+     "National Air System",
+     "Security"
+    ]
+   },
+   {
+    "name": "delay_minutes",
+    "type": "BIGINT",
+    "description": "Total delay minutes for that month and cause.",
+    "samples": [
+     3715582,
+     1885576,
+     14103
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "mart_ontime_by_carrier",
+  "fq": "flight.mart_ontime_by_carrier",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "On-time KPIs per carrier (all of Jan-Apr 2024).",
+  "rows": 15,
+  "columns": [
+   {
+    "name": "carrier_code",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "OO",
+     "NK",
+     "AA"
+    ]
+   },
+   {
+    "name": "carrier_name",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Endeavor Air",
+     "JetBlue Airways",
+     "United Airlines"
+    ]
+   },
+   {
+    "name": "scheduled_flights",
+    "type": "BIGINT",
+    "description": "All scheduled flights.",
+    "samples": [
+     25473,
+     80504,
+     92727
+    ]
+   },
+   {
+    "name": "cancelled_flights",
+    "type": "BIGINT",
+    "description": "Cancelled flights.",
+    "samples": [
+     282,
+     1095,
+     319
+    ]
+   },
+   {
+    "name": "diverted_flights",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     551,
+     202,
+     125
+    ]
+   },
+   {
+    "name": "completed_flights",
+    "type": "BIGINT",
+    "description": "Flights neither cancelled nor diverted.",
+    "samples": [
+     36982,
+     84923,
+     61768
+    ]
+   },
+   {
+    "name": "delayed_flights",
+    "type": "BIGINT",
+    "description": "Completed flights delayed 15+ minutes.",
+    "samples": [
+     48356,
+     4591,
+     16688
+    ]
+   },
+   {
+    "name": "cancellation_rate",
+    "type": "DOUBLE",
+    "description": "Cancelled / scheduled, a fraction between 0 and 1.",
+    "samples": [
+     0.0167,
+     0.0149,
+     0.0172
+    ]
+   },
+   {
+    "name": "delay_rate",
+    "type": "DOUBLE",
+    "description": "Delayed / completed, a fraction between 0 and 1.",
+    "samples": [
+     0.2366,
+     0.2489,
+     0.1887
+    ]
+   },
+   {
+    "name": "on_time_pct",
+    "type": "DOUBLE",
+    "description": "1 - delay_rate, a fraction between 0 and 1 (not 0-100).",
+    "samples": [
+     0.8162,
+     0.7634,
+     0.7511
+    ]
+   },
+   {
+    "name": "avg_arr_delay_minutes",
+    "type": "DOUBLE",
+    "description": "Average arrival delay of completed flights, minutes.",
+    "samples": [
+     -0.47,
+     5.3,
+     6.62
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "mart_ontime_by_dow_month",
+  "fq": "flight.mart_ontime_by_dow_month",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "On-time KPIs per month and day of week (1 = Monday).",
+  "rows": 28,
+  "columns": [
+   {
+    "name": "flight_month",
+    "type": "INTEGER",
+    "description": "",
+    "samples": [
+     1,
+     3,
+     2
+    ]
+   },
+   {
+    "name": "month_name",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Jan",
+     "Mar",
+     "Apr"
+    ]
+   },
+   {
+    "name": "day_of_week",
+    "type": "INTEGER",
+    "description": "",
+    "samples": [
+     1,
+     7,
+     4
+    ]
+   },
+   {
+    "name": "day_name",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Sat",
+     "Thu",
+     "Mon"
+    ]
+   },
+   {
+    "name": "scheduled_flights",
+    "type": "BIGINT",
+    "description": "All scheduled flights.",
+    "samples": [
+     63514,
+     67754,
+     99425
+    ]
+   },
+   {
+    "name": "cancelled_flights",
+    "type": "BIGINT",
+    "description": "Cancelled flights.",
+    "samples": [
+     95,
+     1173,
+     319
+    ]
+   },
+   {
+    "name": "diverted_flights",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     238,
+     105,
+     208
+    ]
+   },
+   {
+    "name": "completed_flights",
+    "type": "BIGINT",
+    "description": "Flights neither cancelled nor diverted.",
+    "samples": [
+     61369,
+     70608,
+     78935
+    ]
+   },
+   {
+    "name": "delayed_flights",
+    "type": "BIGINT",
+    "description": "Completed flights delayed 15+ minutes.",
+    "samples": [
+     19039,
+     12594,
+     12214
+    ]
+   },
+   {
+    "name": "cancellation_rate",
+    "type": "DOUBLE",
+    "description": "Cancelled / scheduled, a fraction between 0 and 1.",
+    "samples": [
+     0.0094,
+     0.007,
+     0.0165
+    ]
+   },
+   {
+    "name": "delay_rate",
+    "type": "DOUBLE",
+    "description": "Delayed / completed, a fraction between 0 and 1.",
+    "samples": [
+     0.1887,
+     0.1763,
+     0.1479
+    ]
+   },
+   {
+    "name": "on_time_pct",
+    "type": "DOUBLE",
+    "description": "1 - delay_rate, a fraction between 0 and 1 (not 0-100).",
+    "samples": [
+     0.7552,
+     0.8098,
+     0.8133
+    ]
+   },
+   {
+    "name": "avg_arr_delay_minutes",
+    "type": "DOUBLE",
+    "description": "Average arrival delay of completed flights, minutes.",
+    "samples": [
+     9.57,
+     2.44,
+     2.95
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "mart_ontime_by_hour",
+  "fq": "flight.mart_ontime_by_hour",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "On-time KPIs per scheduled departure hour (0-23).",
+  "rows": 24,
+  "columns": [
+   {
+    "name": "dep_hour",
+    "type": "INTEGER",
+    "description": "Unique key.",
+    "samples": [
+     15,
+     22,
+     5
+    ]
+   },
+   {
+    "name": "scheduled_flights",
+    "type": "BIGINT",
+    "description": "All scheduled flights.",
+    "samples": [
+     257,
+     135106,
+     135410
+    ]
+   },
+   {
+    "name": "cancelled_flights",
+    "type": "BIGINT",
+    "description": "Cancelled flights.",
+    "samples": [
+     7,
+     41,
+     16
+    ]
+   },
+   {
+    "name": "diverted_flights",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     360,
+     154,
+     323
+    ]
+   },
+   {
+    "name": "completed_flights",
+    "type": "BIGINT",
+    "description": "Flights neither cancelled nor diverted.",
+    "samples": [
+     250,
+     96220,
+     48729
+    ]
+   },
+   {
+    "name": "delayed_flights",
+    "type": "BIGINT",
+    "description": "Completed flights delayed 15+ minutes.",
+    "samples": [
+     25569,
+     28018,
+     57
+    ]
+   },
+   {
+    "name": "cancellation_rate",
+    "type": "DOUBLE",
+    "description": "Cancelled / scheduled, a fraction between 0 and 1.",
+    "samples": [
+     0.0129,
+     0.0124,
+     0.0171
+    ]
+   },
+   {
+    "name": "delay_rate",
+    "type": "DOUBLE",
+    "description": "Delayed / completed, a fraction between 0 and 1.",
+    "samples": [
+     0.228,
+     0.0971,
+     0.2236
+    ]
+   },
+   {
+    "name": "on_time_pct",
+    "type": "DOUBLE",
+    "description": "1 - delay_rate, a fraction between 0 and 1 (not 0-100).",
+    "samples": [
+     0.8048,
+     0.7685,
+     0.8974
+    ]
+   },
+   {
+    "name": "avg_arr_delay_minutes",
+    "type": "DOUBLE",
+    "description": "Average arrival delay of completed flights, minutes.",
+    "samples": [
+     12.18,
+     7.16,
+     2.66
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "mart_ontime_by_origin",
+  "fq": "flight.mart_ontime_by_origin",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "On-time KPIs per origin airport, with airport location.",
+  "rows": 335,
+  "columns": [
+   {
+    "name": "airport_code",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "ABE",
+     "CAK",
+     "CLT"
+    ]
+   },
+   {
+    "name": "airport_name",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Hartsfield Jackson Atlanta International Airport",
+     "Kalamazoo/Battle Creek International Airport",
+     "Cedar City Regional Airport"
+    ]
+   },
+   {
+    "name": "city_name",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Atlanta, GA",
+     "Hartford, CT",
+     "Burlington, VT"
+    ]
+   },
+   {
+    "name": "state_code",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "SD",
+     "CA",
+     "ME"
+    ]
+   },
+   {
+    "name": "latitude",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     31.3258,
+     44.2585,
+     41.3371
+    ]
+   },
+   {
+    "name": "longitude",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     -176.6428,
+     -118.288,
+     -89.8352
+    ]
+   },
+   {
+    "name": "scheduled_flights",
+    "type": "BIGINT",
+    "description": "All scheduled flights.",
+    "samples": [
+     529,
+     313,
+     20315
+    ]
+   },
+   {
+    "name": "cancelled_flights",
+    "type": "BIGINT",
+    "description": "Cancelled flights.",
+    "samples": [
+     15,
+     97,
+     617
+    ]
+   },
+   {
+    "name": "diverted_flights",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     0,
+     26,
+     238
+    ]
+   },
+   {
+    "name": "completed_flights",
+    "type": "BIGINT",
+    "description": "Flights neither cancelled nor diverted.",
+    "samples": [
+     7,
+     107349,
+     2042
+    ]
+   },
+   {
+    "name": "delayed_flights",
+    "type": "BIGINT",
+    "description": "Completed flights delayed 15+ minutes.",
+    "samples": [
+     5,
+     114,
+     30
+    ]
+   },
+   {
+    "name": "cancellation_rate",
+    "type": "DOUBLE",
+    "description": "Cancelled / scheduled, a fraction between 0 and 1.",
+    "samples": [
+     0.068,
+     0.0063,
+     0.0398
+    ]
+   },
+   {
+    "name": "delay_rate",
+    "type": "DOUBLE",
+    "description": "Delayed / completed, a fraction between 0 and 1.",
+    "samples": [
+     0.2183,
+     0.1724,
+     0.0
+    ]
+   },
+   {
+    "name": "on_time_pct",
+    "type": "DOUBLE",
+    "description": "1 - delay_rate, a fraction between 0 and 1 (not 0-100).",
+    "samples": [
+     0.8981,
+     0.8834,
+     0.8488
+    ]
+   },
+   {
+    "name": "avg_arr_delay_minutes",
+    "type": "DOUBLE",
+    "description": "Average arrival delay of completed flights, minutes.",
+    "samples": [
+     4.6,
+     5.51,
+     16.31
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "mart_ontime_daily",
+  "fq": "flight.mart_ontime_daily",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "On-time KPIs per flight date.",
+  "rows": 121,
+  "columns": [
+   {
+    "name": "flight_date",
+    "type": "DATE",
+    "description": "Unique key.",
+    "samples": [
+     "2024-01-06",
+     "2024-01-13",
+     "2024-01-19"
+    ]
+   },
+   {
+    "name": "scheduled_flights",
+    "type": "BIGINT",
+    "description": "All scheduled flights.",
+    "samples": [
+     16950,
+     15483,
+     18455
+    ]
+   },
+   {
+    "name": "cancelled_flights",
+    "type": "BIGINT",
+    "description": "Cancelled flights.",
+    "samples": [
+     33,
+     43,
+     194
+    ]
+   },
+   {
+    "name": "diverted_flights",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     134,
+     48,
+     31
+    ]
+   },
+   {
+    "name": "completed_flights",
+    "type": "BIGINT",
+    "description": "Flights neither cancelled nor diverted.",
+    "samples": [
+     16520,
+     18145,
+     16216
+    ]
+   },
+   {
+    "name": "delayed_flights",
+    "type": "BIGINT",
+    "description": "Completed flights delayed 15+ minutes.",
+    "samples": [
+     3330,
+     3576,
+     3355
+    ]
+   },
+   {
+    "name": "cancellation_rate",
+    "type": "DOUBLE",
+    "description": "Cancelled / scheduled, a fraction between 0 and 1.",
+    "samples": [
+     0.001,
+     0.0035,
+     0.0039
+    ]
+   },
+   {
+    "name": "delay_rate",
+    "type": "DOUBLE",
+    "description": "Delayed / completed, a fraction between 0 and 1.",
+    "samples": [
+     0.2101,
+     0.3931,
+     0.2287
+    ]
+   },
+   {
+    "name": "on_time_pct",
+    "type": "DOUBLE",
+    "description": "1 - delay_rate, a fraction between 0 and 1 (not 0-100).",
+    "samples": [
+     0.7946,
+     0.5022,
+     0.7306
+    ]
+   },
+   {
+    "name": "avg_arr_delay_minutes",
+    "type": "DOUBLE",
+    "description": "Average arrival delay of completed flights, minutes.",
+    "samples": [
+     1.37,
+     26.13,
+     2.38
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "flight",
+  "table": "mart_top_delayed_routes",
+  "fq": "flight.mart_top_delayed_routes",
+  "project": "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project.",
+  "description": "The 1,400 busiest routes ranked by delay rate (delay_rank 1 = worst).",
+  "rows": 1400,
+  "columns": [
+   {
+    "name": "delay_rank",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     1,
+     12,
+     17
+    ]
+   },
+   {
+    "name": "route",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "MSP-SFO",
+     "DFW-ABQ",
+     "MIA-IAH"
+    ]
+   },
+   {
+    "name": "origin_airport_code",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "PSP",
+     "PHX",
+     "ASE"
+    ]
+   },
+   {
+    "name": "dest_airport_code",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "MSY",
+     "ABQ",
+     "LGA"
+    ]
+   },
+   {
+    "name": "scheduled_flights",
+    "type": "BIGINT",
+    "description": "All scheduled flights.",
+    "samples": [
+     1972,
+     515,
+     1013
+    ]
+   },
+   {
+    "name": "cancelled_flights",
+    "type": "BIGINT",
+    "description": "Cancelled flights.",
+    "samples": [
+     16,
+     26,
+     11
+    ]
+   },
+   {
+    "name": "diverted_flights",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     8,
+     11,
+     0
+    ]
+   },
+   {
+    "name": "completed_flights",
+    "type": "BIGINT",
+    "description": "Flights neither cancelled nor diverted.",
+    "samples": [
+     979,
+     1934,
+     552
+    ]
+   },
+   {
+    "name": "delayed_flights",
+    "type": "BIGINT",
+    "description": "Completed flights delayed 15+ minutes.",
+    "samples": [
+     911,
+     292,
+     155
+    ]
+   },
+   {
+    "name": "cancellation_rate",
+    "type": "DOUBLE",
+    "description": "Cancelled / scheduled, a fraction between 0 and 1.",
+    "samples": [
+     0.017,
+     0.0231,
+     0.0129
+    ]
+   },
+   {
+    "name": "delay_rate",
+    "type": "DOUBLE",
+    "description": "Delayed / completed, a fraction between 0 and 1.",
+    "samples": [
+     0.4842,
+     0.4769,
+     0.3169
+    ]
+   },
+   {
+    "name": "on_time_pct",
+    "type": "DOUBLE",
+    "description": "1 - delay_rate, a fraction between 0 and 1 (not 0-100).",
+    "samples": [
+     0.5215,
+     0.5487,
+     0.6246
+    ]
+   },
+   {
+    "name": "avg_arr_delay_minutes",
+    "type": "DOUBLE",
+    "description": "Average arrival delay of completed flights, minutes.",
+    "samples": [
+     22.65,
+     23.43,
+     13.79
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "fraud",
+  "table": "dim_account",
+  "fq": "fraud.dim_account",
+  "project": "Synthetic card transactions Jan-Aug 2025, Bank Fraud Detection project.",
+  "description": "Account dimension with lifetime aggregate stats.",
+  "rows": 3000,
+  "columns": [
+   {
+    "name": "account_id",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "ACCT000012",
+     "ACCT000024",
+     "ACCT000044"
+    ]
+   },
+   {
+    "name": "customer_id",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "CUST000022",
+     "CUST000029",
+     "CUST000059"
+    ]
+   },
+   {
+    "name": "home_country",
+    "type": "VARCHAR",
+    "description": "Account holder's home country.",
+    "samples": [
+     "France",
+     "Nigeria",
+     "UAE"
+    ]
+   },
+   {
+    "name": "lifetime_txn_count",
+    "type": "BIGINT",
+    "description": "Number of transactions of the account.",
+    "samples": [
+     18,
+     23,
+     62
+    ]
+   },
+   {
+    "name": "lifetime_fraud_count",
+    "type": "BIGINT",
+    "description": "Number of fraudulent transactions of the account.",
+    "samples": [
+     8,
+     1,
+     5
+    ]
+   },
+   {
+    "name": "lifetime_fraud_rate",
+    "type": "DOUBLE",
+    "description": "lifetime_fraud_count / lifetime_txn_count (fraction).",
+    "samples": [
+     0.0556,
+     0.025,
+     0.0192
+    ]
+   },
+   {
+    "name": "lifetime_avg_amount",
+    "type": "DOUBLE",
+    "description": "Average transaction amount of the account.",
+    "samples": [
+     32.21,
+     91.12,
+     90.57
+    ]
+   },
+   {
+    "name": "lifetime_stddev_amount",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     22.43,
+     50.43,
+     11.9
+    ]
+   },
+   {
+    "name": "first_transaction_datetime",
+    "type": "TIMESTAMP",
+    "description": "",
+    "samples": [
+     "2025-01-06 14:55:35",
+     "2025-01-04 15:28:10",
+     "2025-01-02 14:18:39"
+    ]
+   },
+   {
+    "name": "last_transaction_datetime",
+    "type": "TIMESTAMP",
+    "description": "",
+    "samples": [
+     "2025-08-31 06:50:58",
+     "2025-08-31 13:03:11",
+     "2025-08-27 13:51:21"
+    ]
+   },
+   {
+    "name": "lifetime_distinct_categories",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     3,
+     14,
+     10
+    ]
+   },
+   {
+    "name": "lifetime_distinct_countries",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     1,
+     5,
+     2
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "fraud",
+  "table": "fact_transactions",
+  "fq": "fraud.fact_transactions",
+  "project": "Synthetic card transactions Jan-Aug 2025, Bank Fraud Detection project.",
+  "description": "Transaction fact table (star schema).",
+  "rows": 149995,
+  "columns": [
+   {
+    "name": "transaction_id",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "TXN00122884",
+     "TXN00122890",
+     "TXN00122913"
+    ]
+   },
+   {
+    "name": "account_id",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "ACCT001799",
+     "ACCT001014",
+     "ACCT001140"
+    ]
+   },
+   {
+    "name": "customer_id",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "CUST000449",
+     "CUST000391",
+     "CUST000314"
+    ]
+   },
+   {
+    "name": "transaction_datetime",
+    "type": "TIMESTAMP",
+    "description": "Timestamp of the transaction (2025-01-01 to 2025-08-31).",
+    "samples": [
+     "2025-07-19 15:28:55",
+     "2025-07-19 15:35:33",
+     "2025-07-19 15:35:47"
+    ]
+   },
+   {
+    "name": "transaction_date",
+    "type": "DATE",
+    "description": "",
+    "samples": [
+     "2025-07-23",
+     "2025-08-08",
+     "2025-08-16"
+    ]
+   },
+   {
+    "name": "transaction_hour",
+    "type": "INTEGER",
+    "description": "Hour of day 0-23.",
+    "samples": [
+     16,
+     0,
+     11
+    ]
+   },
+   {
+    "name": "transaction_dow",
+    "type": "INTEGER",
+    "description": "Day of week, 0 = Sunday ... 6 = Saturday (Postgres convention).",
+    "samples": [
+     0,
+     5,
+     1
+    ]
+   },
+   {
+    "name": "amount",
+    "type": "DOUBLE",
+    "description": "Transaction amount (currency units).",
+    "samples": [
+     51.37,
+     55.32,
+     67.48
+    ]
+   },
+   {
+    "name": "merchant_category",
+    "type": "VARCHAR",
+    "description": "e.g. grocery, electronics, travel, crypto_exchange, atm_withdrawal, gambling.",
+    "samples": [
+     "electronics",
+     "money_transfer",
+     "gas_station"
+    ]
+   },
+   {
+    "name": "transaction_country",
+    "type": "VARCHAR",
+    "description": "Country where the transaction happened.",
+    "samples": [
+     "USA",
+     "China",
+     "Mexico"
+    ]
+   },
+   {
+    "name": "is_foreign_transaction",
+    "type": "BOOLEAN",
+    "description": "True if transaction_country differs from the account's home country.",
+    "samples": [
+     false,
+     true
+    ]
+   },
+   {
+    "name": "channel",
+    "type": "VARCHAR",
+    "description": "in-store, online, mobile or atm.",
+    "samples": [
+     "atm",
+     "in-store",
+     "mobile"
+    ]
+   },
+   {
+    "name": "is_fraud",
+    "type": "INTEGER",
+    "description": "1 if the transaction is fraudulent, else 0.",
+    "samples": [
+     0,
+     1
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "retail",
+  "table": "dim_customer",
+  "fq": "retail.dim_customer",
+  "project": "UK online gift retailer, Dec 2009 - Dec 2011 (UCI Online Retail II), Retail churn project.",
+  "description": "Customer dimension.",
+  "rows": 5939,
+  "columns": [
+   {
+    "name": "customer_id",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "12351",
+     "12368",
+     "12414"
+    ]
+   },
+   {
+    "name": "country",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Denmark",
+     "Norway",
+     "RSA"
+    ]
+   },
+   {
+    "name": "first_order_date",
+    "type": "TIMESTAMP",
+    "description": "Timestamp of the customer's first sale order.",
+    "samples": [
+     "2010-03-08 08:09:00",
+     "2010-12-22 14:28:00",
+     "2010-10-07 13:49:00"
+    ]
+   },
+   {
+    "name": "last_order_date",
+    "type": "TIMESTAMP",
+    "description": "Timestamp of the customer's last sale order.",
+    "samples": [
+     "2011-09-25 13:13:00",
+     "2011-05-19 17:47:00",
+     "2011-02-04 10:39:00"
+    ]
+   },
+   {
+    "name": "customer_tenure_days",
+    "type": "INTEGER",
+    "description": "Days between first and last sale order.",
+    "samples": [
+     0,
+     401,
+     432
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "retail",
+  "table": "dim_product",
+  "fq": "retail.dim_product",
+  "project": "UK online gift retailer, Dec 2009 - Dec 2011 (UCI Online Retail II), Retail churn project.",
+  "description": "Product dimension.",
+  "rows": 5049,
+  "columns": [
+   {
+    "name": "stock_code",
+    "type": "VARCHAR",
+    "description": "Product code, e.g. '85123A'. Unique key.",
+    "samples": [
+     "10080",
+     "10138",
+     "15056BL"
+    ]
+   },
+   {
+    "name": "description",
+    "type": "VARCHAR",
+    "description": "Product name, upper case, e.g. 'WHITE HANGING HEART T-LIGHT HOLDER'.",
+    "samples": [
+     "HEARTS WRAPPING TAPE",
+     "MINI FUNKY DESIGN TAPES",
+     "SANDALWOOD FAN"
+    ]
+   },
+   {
+    "name": "quantity_sold",
+    "type": "BIGINT",
+    "description": "Units sold over the whole period.",
+    "samples": [
+     0,
+     254,
+     1597
+    ]
+   },
+   {
+    "name": "net_revenue",
+    "type": "DOUBLE",
+    "description": "Revenue net of returns (GBP).",
+    "samples": [
+     0.0,
+     6320.33,
+     1311.96
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "retail",
+  "table": "fact_orders",
+  "fq": "retail.fact_orders",
+  "project": "UK online gift retailer, Dec 2009 - Dec 2011 (UCI Online Retail II), Retail churn project.",
+  "description": "Order-grain fact table, star schema, references dim_customer.",
+  "rows": 44870,
+  "columns": [
+   {
+    "name": "order_key",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "ad011a4212a2cdb47dead3c0c1f5eec5",
+     "cbd8b70887511b6d80fe2ab5401ba930",
+     "963078091247268ab2fb0c416e4da78f"
+    ]
+   },
+   {
+    "name": "customer_id",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "12367",
+     "12378",
+     "12398"
+    ]
+   },
+   {
+    "name": "invoice",
+    "type": "VARCHAR",
+    "description": "Invoice number; credit notes start with C.",
+    "samples": [
+     "536012",
+     "535838",
+     "529304"
+    ]
+   },
+   {
+    "name": "order_type",
+    "type": "VARCHAR",
+    "description": "'sale' or 'credit_note' (a return). Allowed values: sale, credit_note.",
+    "samples": [
+     "credit_note",
+     "sale"
+    ]
+   },
+   {
+    "name": "is_sale_order",
+    "type": "BOOLEAN",
+    "description": "True for sale orders.",
+    "samples": [
+     false,
+     true
+    ]
+   },
+   {
+    "name": "order_date",
+    "type": "TIMESTAMP",
+    "description": "Invoice timestamp.",
+    "samples": [
+     "2010-01-04 09:53:00",
+     "2011-09-25 13:13:00",
+     "2011-05-19 17:47:00"
+    ]
+   },
+   {
+    "name": "country",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Denmark",
+     "Malta",
+     "Norway"
+    ]
+   },
+   {
+    "name": "gross_sale_amount",
+    "type": "DOUBLE",
+    "description": "Value of items sold on the invoice (GBP).",
+    "samples": [
+     0.0,
+     475.39,
+     1294.32
+    ]
+   },
+   {
+    "name": "return_amount",
+    "type": "DOUBLE",
+    "description": "Value of items returned (GBP, positive).",
+    "samples": [
+     0.0,
+     103.5,
+     40.0
+    ]
+   },
+   {
+    "name": "net_amount",
+    "type": "DOUBLE",
+    "description": "gross_sale_amount - return_amount (GBP).",
+    "samples": [
+     475.39,
+     1294.32,
+     1402.62
+    ]
+   },
+   {
+    "name": "items_purchased",
+    "type": "BIGINT",
+    "description": "Units purchased.",
+    "samples": [
+     0,
+     509,
+     601
+    ]
+   },
+   {
+    "name": "items_returned",
+    "type": "BIGINT",
+    "description": "Units returned.",
+    "samples": [
+     0,
+     16,
+     110
+    ]
+   },
+   {
+    "name": "has_return",
+    "type": "BOOLEAN",
+    "description": "",
+    "samples": [
+     true,
+     false
+    ]
+   },
+   {
+    "name": "distinct_products",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     1,
+     17,
+     12
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "retail",
+  "table": "mart_customer_rfm",
+  "fq": "retail.mart_customer_rfm",
+  "project": "UK online gift retailer, Dec 2009 - Dec 2011 (UCI Online Retail II), Retail churn project.",
+  "description": "RFM scores and behavioral segment per customer with at least one sale order (tie-safe percent_rank scoring).",
+  "rows": 5878,
+  "columns": [
+   {
+    "name": "customer_id",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "13526",
+     "14980",
+     "16301"
+    ]
+   },
+   {
+    "name": "country",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Denmark",
+     "Norway",
+     "RSA"
+    ]
+   },
+   {
+    "name": "first_order_date",
+    "type": "TIMESTAMP",
+    "description": "",
+    "samples": [
+     "2009-12-04 09:49:00",
+     "2009-12-02 15:10:00",
+     "2009-12-07 13:32:00"
+    ]
+   },
+   {
+    "name": "last_order_date",
+    "type": "TIMESTAMP",
+    "description": "",
+    "samples": [
+     "2009-12-04 09:49:00",
+     "2009-12-07 13:32:00",
+     "2009-12-08 14:56:00"
+    ]
+   },
+   {
+    "name": "recency_days",
+    "type": "INTEGER",
+    "description": "Days from the customer's last sale order to the end of the data (2011-12-09).",
+    "samples": [
+     700,
+     696,
+     689
+    ]
+   },
+   {
+    "name": "frequency",
+    "type": "BIGINT",
+    "description": "Number of sale orders.",
+    "samples": [
+     1,
+     12,
+     17
+    ]
+   },
+   {
+    "name": "monetary",
+    "type": "DOUBLE",
+    "description": "Total net amount spent (GBP).",
+    "samples": [
+     0.0,
+     107.33,
+     132.55
+    ]
+   },
+   {
+    "name": "total_items_purchased",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     94.0,
+     68.0,
+     14.0
+    ]
+   },
+   {
+    "name": "total_items_returned",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     0.0,
+     14.0,
+     283.0
+    ]
+   },
+   {
+    "name": "return_rate",
+    "type": "DOUBLE",
+    "description": "Items returned / items purchased.",
+    "samples": [
+     0.0,
+     0.0815,
+     0.1724
+    ]
+   },
+   {
+    "name": "r_score",
+    "type": "INTEGER",
+    "description": "Recency score 1-5 (5 = most recent). Allowed values: 1, 2, 3, 4, 5.",
+    "samples": [
+     1,
+     3,
+     5
+    ]
+   },
+   {
+    "name": "f_score",
+    "type": "INTEGER",
+    "description": "Frequency score 1-5. Allowed values: 1, 2, 3, 4, 5.",
+    "samples": [
+     1,
+     3,
+     2
+    ]
+   },
+   {
+    "name": "m_score",
+    "type": "INTEGER",
+    "description": "Monetary score 1-5. Allowed values: 1, 2, 3, 4, 5.",
+    "samples": [
+     1,
+     3,
+     4
+    ]
+   },
+   {
+    "name": "rfm_total_score",
+    "type": "INTEGER",
+    "description": "r_score + f_score + m_score.",
+    "samples": [
+     8,
+     12,
+     5
+    ]
+   },
+   {
+    "name": "customer_segment",
+    "type": "VARCHAR",
+    "description": "Champions, Loyal, Potential Loyalist, At Risk, Lost, Others. Allowed values: Champions, Loyal, Potential Loyalist, At Risk, Lost, Others.",
+    "samples": [
+     "Champions",
+     "Others",
+     "Loyal"
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "retail",
+  "table": "mart_monthly_sales_country",
+  "fq": "retail.mart_monthly_sales_country",
+  "project": "UK online gift retailer, Dec 2009 - Dec 2011 (UCI Online Retail II), Retail churn project.",
+  "description": "Monthly revenue trends broken down by country, for dashboard/geo analysis.",
+  "rows": 594,
+  "columns": [
+   {
+    "name": "sales_month",
+    "type": "DATE",
+    "description": "First day of the month.",
+    "samples": [
+     "2010-04-01",
+     "2010-12-01",
+     "2009-12-01"
+    ]
+   },
+   {
+    "name": "country",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Denmark",
+     "Norway",
+     "RSA"
+    ]
+   },
+   {
+    "name": "gross_revenue",
+    "type": "DOUBLE",
+    "description": "Gross sales (GBP).",
+    "samples": [
+     549.08,
+     0.0,
+     485.31
+    ]
+   },
+   {
+    "name": "returned_revenue",
+    "type": "DOUBLE",
+    "description": "Value of returns (GBP).",
+    "samples": [
+     0.0,
+     147.05,
+     25.5
+    ]
+   },
+   {
+    "name": "net_revenue",
+    "type": "DOUBLE",
+    "description": "Gross minus returns (GBP).",
+    "samples": [
+     549.08,
+     485.31,
+     2.95
+    ]
+   },
+   {
+    "name": "num_orders",
+    "type": "BIGINT",
+    "description": "Number of sale orders.",
+    "samples": [
+     0,
+     16,
+     11
+    ]
+   },
+   {
+    "name": "num_customers",
+    "type": "BIGINT",
+    "description": "Distinct customers.",
+    "samples": [
+     0,
+     16,
+     26
+    ]
+   },
+   {
+    "name": "items_sold",
+    "type": "BIGINT",
+    "description": "Units sold.",
+    "samples": [
+     134,
+     0,
+     10822
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "retail",
+  "table": "mart_product_performance",
+  "fq": "retail.mart_product_performance",
+  "project": "UK online gift retailer, Dec 2009 - Dec 2011 (UCI Online Retail II), Retail churn project.",
+  "description": "Product revenue/quantity performance with ABC classification.",
+  "rows": 4705,
+  "columns": [
+   {
+    "name": "stock_code",
+    "type": "VARCHAR",
+    "description": "Unique key.",
+    "samples": [
+     "48138",
+     "20685",
+     "22502"
+    ]
+   },
+   {
+    "name": "description",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "PAPER CHAIN KIT 50'S CHRISTMAS",
+     "ANTIQUE SILVER TEA GLASS ETCHED",
+     "RED TOADSTOOL LED NIGHT LIGHT"
+    ]
+   },
+   {
+    "name": "quantity_sold",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     1128,
+     15097,
+     5491
+    ]
+   },
+   {
+    "name": "quantity_returned",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     440,
+     253,
+     6224
+    ]
+   },
+   {
+    "name": "gross_revenue",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     182999.67,
+     69108.21,
+     52607.72
+    ]
+   },
+   {
+    "name": "returned_revenue",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     774.07,
+     1461.7,
+     1383.75
+    ]
+   },
+   {
+    "name": "net_revenue",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     48550.06,
+     39137.87,
+     38657.31
+    ]
+   },
+   {
+    "name": "return_rate_revenue",
+    "type": "DOUBLE",
+    "description": "returned_revenue / gross_revenue (fraction).",
+    "samples": [
+     0.0124,
+     0.0808,
+     0.0087
+    ]
+   },
+   {
+    "name": "num_orders",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     1952,
+     2067,
+     978
+    ]
+   },
+   {
+    "name": "num_distinct_customers",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     536,
+     387,
+     681
+    ]
+   },
+   {
+    "name": "revenue_rank",
+    "type": "BIGINT",
+    "description": "Rank by net revenue (1 = highest).",
+    "samples": [
+     16,
+     23,
+     32
+    ]
+   },
+   {
+    "name": "cumulative_revenue_pct",
+    "type": "DOUBLE",
+    "description": "Cumulative share of total net revenue down to this product (fraction).",
+    "samples": [
+     0.3049,
+     0.3064,
+     0.3169
+    ]
+   },
+   {
+    "name": "abc_class",
+    "type": "VARCHAR",
+    "description": "A (top ~80% of revenue), B (next ~15%), C (rest). Allowed values: A, B, C.",
+    "samples": [
+     "A",
+     "B",
+     "C"
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "sales",
+  "table": "demand_forecast",
+  "fq": "sales.demand_forecast",
+  "project": "Synthetic daily sales by product category 2023-2025 (Kafka replay), Sales Demand Forecasting project.",
+  "description": "Prophet forecasts of daily units per category for 2026-01-01 to 2026-03-31.",
+  "rows": 720,
+  "columns": [
+   {
+    "name": "id",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     10832,
+     10843,
+     10848
+    ]
+   },
+   {
+    "name": "product_category",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Electronics",
+     "Toys",
+     "Books"
+    ]
+   },
+   {
+    "name": "forecast_date",
+    "type": "DATE",
+    "description": "Date being forecast.",
+    "samples": [
+     "2026-01-01",
+     "2026-01-06",
+     "2026-01-26"
+    ]
+   },
+   {
+    "name": "model_name",
+    "type": "VARCHAR",
+    "description": "Forecasting model ('prophet').",
+    "samples": [
+     "prophet"
+    ]
+   },
+   {
+    "name": "yhat",
+    "type": "DOUBLE",
+    "description": "Forecast daily units sold.",
+    "samples": [
+     600.3911,
+     592.1454,
+     863.6827
+    ]
+   },
+   {
+    "name": "yhat_lower",
+    "type": "DOUBLE",
+    "description": "Lower bound of the forecast uncertainty interval.",
+    "samples": [
+     777.0985,
+     397.1084,
+     386.7468
+    ]
+   },
+   {
+    "name": "yhat_upper",
+    "type": "DOUBLE",
+    "description": "Upper bound of the forecast uncertainty interval.",
+    "samples": [
+     1259.8551,
+     766.0689,
+     620.1676
+    ]
+   },
+   {
+    "name": "horizon_days",
+    "type": "INTEGER",
+    "description": "Days ahead of the training end.",
+    "samples": [
+     30,
+     60,
+     90
+    ]
+   },
+   {
+    "name": "generated_at",
+    "type": "TIMESTAMP",
+    "description": "",
+    "samples": [
+     "2026-09-28 11:21:36.983923"
+    ]
+   }
+  ],
+  "dbt_documented": false
+ },
+ {
+  "schema": "sales",
+  "table": "dim_product_category",
+  "fq": "sales.dim_product_category",
+  "project": "Synthetic daily sales by product category 2023-2025 (Kafka replay), Sales Demand Forecasting project.",
+  "description": "Category dimension with a qualitative seasonality profile.",
+  "rows": 8,
+  "columns": [
+   {
+    "name": "category_id",
+    "type": "BIGINT",
+    "description": "Unique key.",
+    "samples": [
+     1,
+     6,
+     3
+    ]
+   },
+   {
+    "name": "product_category",
+    "type": "VARCHAR",
+    "description": "Apparel, Beauty, Books, Electronics, Groceries, Home & Garden, Sporting Goods, Toys. Unique key.",
+    "samples": [
+     "Electronics",
+     "Books",
+     "Home & Garden"
+    ]
+   },
+   {
+    "name": "seasonality_profile",
+    "type": "VARCHAR",
+    "description": "Text label of the category's seasonality, e.g. 'Steady demand'.",
+    "samples": [
+     "Steady demand",
+     "Back-to-school / holiday influenced",
+     "Seasonal (weather-driven)"
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "sales",
+  "table": "fact_daily_sales",
+  "fq": "sales.fact_daily_sales",
+  "project": "Synthetic daily sales by product category 2023-2025 (Kafka replay), Sales Demand Forecasting project.",
+  "description": "Star-schema fact table: one row per category per day.",
+  "rows": 8768,
+  "columns": [
+   {
+    "name": "category_id",
+    "type": "BIGINT",
+    "description": "",
+    "samples": [
+     1,
+     3,
+     2
+    ]
+   },
+   {
+    "name": "product_category",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Electronics",
+     "Books",
+     "Toys"
+    ]
+   },
+   {
+    "name": "event_date",
+    "type": "DATE",
+    "description": "Calendar date (2023-01-01 to 2025-12-31).",
+    "samples": [
+     "2023-03-03",
+     "2023-04-09",
+     "2023-04-12"
+    ]
+   },
+   {
+    "name": "units_sold",
+    "type": "BIGINT",
+    "description": "Units sold that day in the category.",
+    "samples": [
+     860,
+     517,
+     516
+    ]
+   },
+   {
+    "name": "revenue",
+    "type": "DOUBLE",
+    "description": "Revenue that day in the category.",
+    "samples": [
+     23839.96,
+     20273.02,
+     24254.54
+    ]
+   },
+   {
+    "name": "avg_unit_price",
+    "type": "DOUBLE",
+    "description": "revenue / units_sold.",
+    "samples": [
+     40.6727,
+     41.634,
+     40.1459
+    ]
+   },
+   {
+    "name": "promotion_rate",
+    "type": "DOUBLE",
+    "description": "Share of that day's sales events that were on promotion (fraction).",
+    "samples": [
+     0.0,
+     1.0
+    ]
+   },
+   {
+    "name": "rolling_avg_units_7d",
+    "type": "DOUBLE",
+    "description": "7-day rolling average of units sold.",
+    "samples": [
+     623.0,
+     541.1429,
+     523.1429
+    ]
+   },
+   {
+    "name": "rolling_avg_units_30d",
+    "type": "DOUBLE",
+    "description": "30-day rolling average of units sold.",
+    "samples": [
+     613.7308,
+     537.1,
+     520.0667
+    ]
+   },
+   {
+    "name": "wow_growth_rate",
+    "type": "DOUBLE",
+    "description": "Week-over-week growth of units sold (fraction).",
+    "samples": [
+     0.4368,
+     0.1667,
+     0.1574
+    ]
+   }
+  ],
+  "dbt_documented": true
+ },
+ {
+  "schema": "sales",
+  "table": "mart_category_daily_sales",
+  "fq": "sales.mart_category_daily_sales",
+  "project": "Synthetic daily sales by product category 2023-2025 (Kafka replay), Sales Demand Forecasting project.",
+  "description": "Forecast-ready mart, one row per category per day (ds/y naming for Prophet).",
+  "rows": 8768,
+  "columns": [
+   {
+    "name": "ds",
+    "type": "DATE",
+    "description": "Date.",
+    "samples": [
+     "2023-03-03",
+     "2023-04-09",
+     "2023-04-12"
+    ]
+   },
+   {
+    "name": "product_category",
+    "type": "VARCHAR",
+    "description": "",
+    "samples": [
+     "Apparel",
+     "Sporting Goods",
+     "Electronics"
+    ]
+   },
+   {
+    "name": "y",
+    "type": "BIGINT",
+    "description": "Units sold that day.",
+    "samples": [
+     860,
+     517,
+     516
+    ]
+   },
+   {
+    "name": "revenue",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     23839.96,
+     20273.02,
+     24254.54
+    ]
+   },
+   {
+    "name": "avg_unit_price",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     40.6727,
+     41.634,
+     40.1459
+    ]
+   },
+   {
+    "name": "promotion_rate",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     0.0,
+     1.0
+    ]
+   },
+   {
+    "name": "rolling_avg_units_7d",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     693.6667,
+     596.0,
+     592.5714
+    ]
+   },
+   {
+    "name": "rolling_avg_units_30d",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     613.7308,
+     537.1,
+     520.0667
+    ]
+   },
+   {
+    "name": "wow_growth_rate",
+    "type": "DOUBLE",
+    "description": "",
+    "samples": [
+     0.4368,
+     0.1667,
+     0.1574
+    ]
+   }
+  ],
+  "dbt_documented": true
+ }
+]

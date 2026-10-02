@@ -1,0 +1,67 @@
+# Single config for the Text-to-SQL analytics agent.
+# Paths are relative to the project root (the folder containing this file).
+
+paths:
+  warehouse: data/warehouse.duckdb
+  manifest: data/MANIFEST.csv
+  catalog: data/catalog.json
+  golden: data/golden.jsonl
+  splits: data/splits.json
+  traces_db: data/traces.db
+  results: results
+
+# Source DS projects (relative to the Projects folder, two levels up). Only the postgres service
+# is started, one stack at a time; credentials stay inside the container.
+sources:
+  projects_root: ../..
+  projects:
+    flight: {folder: Airline_Flight_Delay/flight_delay_project, dbt: dbt/flight_dbt}
+    fraud: {folder: Bank_Fraud_Detection/fraud_detection_project, dbt: dbt/fraud_dbt}
+    retail: {folder: Retail_Ecommerce_Analytics/retail_analytics_project, dbt: dbt/retail_dbt}
+    sales: {folder: Sales_Demand_Forecasting/sales_forecast_project, dbt: dbt/sales_dbt}
+  source_schema: warehouse
+  # ML artefacts (feature tables / model predictions) that are not analytics tables. Left out on purpose.
+  exclude:
+    flight: [mart_flight_features, flight_cutoff_features, model_test_predictions]
+    fraud: [mart_transaction_features]
+    retail: []
+    sales: []
+
+data:
+  split_seed: 42
+  dev_size: 30
+
+retrieval:
+  method: bm25          # BM25 over table+column docs (bm25s)
+  top_tables: 7         # tables given to the LLM; chosen on DEV (results/retrieval_dev.csv: recall 1.0 at k=7)
+  sample_values: 3
+
+llm:
+  base_url: http://127.0.0.1:11434
+  model: qwen2.5-coder:7b     # switch to qwen2.5-coder:3b (or a bigger model on a GPU) here
+  models_evaluated: [qwen2.5-coder:7b, qwen2.5-coder:3b]
+  temperature: 0
+  seed: 42
+  num_predict: 512
+  num_ctx: 8192
+  request_timeout_s: 1800
+
+agent:
+  max_retries: 3          # self-correction retries after the first attempt
+  default_limit: 1000     # LIMIT added when the query has none
+  max_rows: 1000          # maximum rows returned to the user
+  timeout_s: 30           # per-query execution timeout (DuckDB interrupt)
+  retry_on_empty: true
+
+eval:
+  float_rel_tol: 0.001   # 0.1% relative, covers ROUND(x,2) on typical magnitudes
+  float_abs_tol: 0.000001
+
+# Ablations evaluated on the test set (scripts/eval_agent.py --config <name>)
+ablations:
+  zero_shot_full: {retrieval: false, docs: false, max_retries: 0, model: qwen2.5-coder:7b}
+  retrieval_docs: {retrieval: true, docs: true, max_retries: 0, model: qwen2.5-coder:7b}
+  full_agent: {retrieval: true, docs: true, max_retries: 3, model: qwen2.5-coder:7b}
+  full_agent_3b: {retrieval: true, docs: true, max_retries: 3, model: qwen2.5-coder:3b}
+  # Optional upper bound (not in the default queue): the gold query's own tables instead of retrieval.
+  oracle_tables_upper: {retrieval: oracle, docs: true, max_retries: 3, model: qwen2.5-coder:7b}

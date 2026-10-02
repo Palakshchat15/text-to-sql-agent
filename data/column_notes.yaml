@@ -1,0 +1,171 @@
+# Hand-written notes that complement the dbt schema.yml files (which describe tables but few columns).
+# Written by the builder from the dbt model SQL of each project. Used by scripts/build_catalog.py.
+# Keys: schema -> table -> {description (used only if dbt has none), columns: {col: text}}
+
+flight:
+  _project: "US domestic flights Jan-Apr 2024 (BTS on-time data), Airline Flight Delay project."
+  dim_carrier:
+    columns:
+      carrier_code: "Two-character airline code, e.g. AA, DL, WN."
+      carrier_name: "Airline name, e.g. 'Delta Air Lines'."
+      scheduled_flights: "Number of scheduled flights of the carrier in the data."
+  dim_airport:
+    columns:
+      airport_code: "Three-letter IATA airport code, e.g. ATL, JFK."
+      airport_name: "Airport name."
+      city_name: "City served."
+      state_code: "Two-letter US state code, e.g. CA, TX."
+  fact_flights:
+    columns:
+      flight_date: "Scheduled flight date (2024-01-01 to 2024-04-30)."
+      day_of_week: "Day of week, 1 = Monday ... 7 = Sunday."
+      route: "Origin-destination pair as text, e.g. 'JFK-LAX'."
+      dep_hour: "Scheduled departure hour (0-23, local time)."
+      distance_miles: "Flight distance in miles."
+      flight_status: "One of 'On time', 'Delayed 15+ min', 'Cancelled', 'Diverted'."
+      is_cancelled: "True if the flight was cancelled."
+      is_diverted: "True if the flight was diverted."
+      cancellation_reason: "Carrier, Weather, National Air System (NULL if not cancelled)."
+      is_delayed_15: "1 if arrival delay >= 15 minutes, 0 otherwise; NULL for cancelled or diverted flights."
+      dep_delay_minutes: "Departure delay in minutes (negative = early)."
+      arr_delay_minutes: "Arrival delay in minutes (negative = early); NULL for cancelled/diverted."
+      carrier_delay_minutes: "Minutes of delay attributed to the carrier."
+      weather_delay_minutes: "Minutes of delay attributed to weather."
+      nas_delay_minutes: "Minutes of delay attributed to the National Air System."
+      security_delay_minutes: "Minutes of delay attributed to security."
+      late_aircraft_delay_minutes: "Minutes of delay caused by a late incoming aircraft."
+  _rate_columns: &rates
+    scheduled_flights: "All scheduled flights."
+    cancelled_flights: "Cancelled flights."
+    completed_flights: "Flights neither cancelled nor diverted."
+    delayed_flights: "Completed flights delayed 15+ minutes."
+    cancellation_rate: "Cancelled / scheduled, a fraction between 0 and 1."
+    delay_rate: "Delayed / completed, a fraction between 0 and 1."
+    on_time_pct: "1 - delay_rate, a fraction between 0 and 1 (not 0-100)."
+    avg_arr_delay_minutes: "Average arrival delay of completed flights, minutes."
+  mart_ontime_by_carrier:
+    description: "On-time KPIs per carrier (all of Jan-Apr 2024)."
+    columns: *rates
+  mart_ontime_by_origin:
+    description: "On-time KPIs per origin airport, with airport location."
+    columns: *rates
+  mart_ontime_by_hour:
+    description: "On-time KPIs per scheduled departure hour (0-23)."
+    columns: *rates
+  mart_ontime_by_dow_month:
+    description: "On-time KPIs per month and day of week (1 = Monday)."
+    columns: *rates
+  mart_ontime_daily:
+    description: "On-time KPIs per flight date."
+    columns: *rates
+  mart_top_delayed_routes:
+    description: "The 1,400 busiest routes ranked by delay rate (delay_rank 1 = worst)."
+    columns: *rates
+  mart_delay_causes_by_month:
+    description: "Total delay minutes per month and cause (Carrier, Weather, National Air System, Security, Late Aircraft)."
+    columns:
+      cause: "Delay cause: Carrier, Weather, National Air System, Security, Late Aircraft."
+      delay_minutes: "Total delay minutes for that month and cause."
+
+fraud:
+  _project: "Synthetic card transactions Jan-Aug 2025, Bank Fraud Detection project."
+  dim_account:
+    columns:
+      home_country: "Account holder's home country."
+      lifetime_txn_count: "Number of transactions of the account."
+      lifetime_fraud_count: "Number of fraudulent transactions of the account."
+      lifetime_fraud_rate: "lifetime_fraud_count / lifetime_txn_count (fraction)."
+      lifetime_avg_amount: "Average transaction amount of the account."
+  fact_transactions:
+    columns:
+      transaction_datetime: "Timestamp of the transaction (2025-01-01 to 2025-08-31)."
+      transaction_hour: "Hour of day 0-23."
+      transaction_dow: "Day of week, 0 = Sunday ... 6 = Saturday (Postgres convention)."
+      amount: "Transaction amount (currency units)."
+      merchant_category: "e.g. grocery, electronics, travel, crypto_exchange, atm_withdrawal, gambling."
+      transaction_country: "Country where the transaction happened."
+      is_foreign_transaction: "True if transaction_country differs from the account's home country."
+      channel: "in-store, online, mobile or atm."
+      is_fraud: "1 if the transaction is fraudulent, else 0."
+
+retail:
+  _project: "UK online gift retailer, Dec 2009 - Dec 2011 (UCI Online Retail II), Retail churn project."
+  dim_customer:
+    columns:
+      first_order_date: "Timestamp of the customer's first sale order."
+      last_order_date: "Timestamp of the customer's last sale order."
+      customer_tenure_days: "Days between first and last sale order."
+  dim_product:
+    columns:
+      stock_code: "Product code, e.g. '85123A'."
+      description: "Product name, upper case, e.g. 'WHITE HANGING HEART T-LIGHT HOLDER'."
+      quantity_sold: "Units sold over the whole period."
+      net_revenue: "Revenue net of returns (GBP)."
+  fact_orders:
+    columns:
+      invoice: "Invoice number; credit notes start with C."
+      order_type: "'sale' or 'credit_note' (a return)."
+      is_sale_order: "True for sale orders."
+      order_date: "Invoice timestamp."
+      gross_sale_amount: "Value of items sold on the invoice (GBP)."
+      return_amount: "Value of items returned (GBP, positive)."
+      net_amount: "gross_sale_amount - return_amount (GBP)."
+      items_purchased: "Units purchased."
+      items_returned: "Units returned."
+  mart_customer_rfm:
+    columns:
+      recency_days: "Days from the customer's last sale order to the end of the data (2011-12-09)."
+      frequency: "Number of sale orders."
+      monetary: "Total net amount spent (GBP)."
+      return_rate: "Items returned / items purchased."
+      r_score: "Recency score 1-5 (5 = most recent)."
+      f_score: "Frequency score 1-5."
+      m_score: "Monetary score 1-5."
+      rfm_total_score: "r_score + f_score + m_score."
+      customer_segment: "Champions, Loyal, Potential Loyalist, At Risk, Lost, Others."
+  mart_monthly_sales_country:
+    columns:
+      sales_month: "First day of the month."
+      gross_revenue: "Gross sales (GBP)."
+      returned_revenue: "Value of returns (GBP)."
+      net_revenue: "Gross minus returns (GBP)."
+      num_orders: "Number of sale orders."
+      num_customers: "Distinct customers."
+      items_sold: "Units sold."
+  mart_product_performance:
+    columns:
+      return_rate_revenue: "returned_revenue / gross_revenue (fraction)."
+      revenue_rank: "Rank by net revenue (1 = highest)."
+      cumulative_revenue_pct: "Cumulative share of total net revenue down to this product (fraction)."
+      abc_class: "A (top ~80% of revenue), B (next ~15%), C (rest)."
+
+sales:
+  _project: "Synthetic daily sales by product category 2023-2025 (Kafka replay), Sales Demand Forecasting project."
+  dim_product_category:
+    columns:
+      product_category: "Apparel, Beauty, Books, Electronics, Groceries, Home & Garden, Sporting Goods, Toys."
+      seasonality_profile: "Text label of the category's seasonality, e.g. 'Steady demand'."
+  fact_daily_sales:
+    columns:
+      event_date: "Calendar date (2023-01-01 to 2025-12-31)."
+      units_sold: "Units sold that day in the category."
+      revenue: "Revenue that day in the category."
+      avg_unit_price: "revenue / units_sold."
+      promotion_rate: "Share of that day's sales events that were on promotion (fraction)."
+      rolling_avg_units_7d: "7-day rolling average of units sold."
+      rolling_avg_units_30d: "30-day rolling average of units sold."
+      wow_growth_rate: "Week-over-week growth of units sold (fraction)."
+  mart_category_daily_sales:
+    description: "Prophet-ready daily series per category: ds = date, y = units sold."
+    columns:
+      ds: "Date."
+      y: "Units sold that day."
+  demand_forecast:
+    description: "Prophet forecasts of daily units per category for 2026-01-01 to 2026-03-31."
+    columns:
+      forecast_date: "Date being forecast."
+      model_name: "Forecasting model ('prophet')."
+      yhat: "Forecast daily units sold."
+      yhat_lower: "Lower bound of the forecast uncertainty interval."
+      yhat_upper: "Upper bound of the forecast uncertainty interval."
+      horizon_days: "Days ahead of the training end."

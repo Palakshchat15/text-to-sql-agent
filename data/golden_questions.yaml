@@ -1,0 +1,202 @@
+# Golden question set for the Text-to-SQL agent.
+# WRITTEN BY THE BUILDER (not a public benchmark). Every gold query is executed against
+# data/warehouse.duckdb by scripts/build_golden.py; questions whose gold SQL fails or returns no
+# rows are rejected. order_matters: true only when the question asks for an ordering.
+# Difficulty levels: single_table, aggregation, join, window, date, multi_step, unanswerable.
+
+- {id: st01, difficulty: single_table, question: "What is the full name of the airline with carrier code B6?",
+   sql: "SELECT carrier_name FROM flight.dim_carrier WHERE carrier_code = 'B6'"}
+- {id: st02, difficulty: single_table, question: "List the airport codes of all airports in Hawaii (state code HI).",
+   sql: "SELECT airport_code FROM flight.dim_airport WHERE state_code = 'HI'"}
+- {id: st03, difficulty: single_table, question: "How many flights were cancelled because of weather?",
+   sql: "SELECT count(*) FROM flight.fact_flights WHERE cancellation_reason = 'Weather'"}
+- {id: st04, difficulty: single_table, question: "Which airlines had an on-time rate above 80%? Give the airline names.",
+   sql: "SELECT carrier_name FROM flight.mart_ontime_by_carrier WHERE on_time_pct > 0.80"}
+- {id: st05, difficulty: single_table, question: "How many flights were longer than 2,500 miles?",
+   sql: "SELECT count(*) FROM flight.fact_flights WHERE distance_miles > 2500"}
+- {id: st06, difficulty: single_table, question: "How many ATM-channel transactions had an amount above 1,000?",
+   sql: "SELECT count(*) FROM fraud.fact_transactions WHERE channel = 'atm' AND amount > 1000"}
+- {id: st07, difficulty: single_table, question: "How many bank accounts have a home country of Nigeria?",
+   sql: "SELECT count(*) FROM fraud.dim_account WHERE home_country = 'Nigeria'"}
+- {id: st08, difficulty: single_table, question: "How many card transactions were fraudulent?",
+   sql: "SELECT count(*) FROM fraud.fact_transactions WHERE is_fraud = 1"}
+- {id: st09, difficulty: single_table, question: "What is the description of the retail product with stock code 85123A?",
+   sql: "SELECT description FROM retail.dim_product WHERE stock_code = '85123A'"}
+- {id: st10, difficulty: single_table, question: "How many retail customers are in the Champions segment?",
+   sql: "SELECT count(*) FROM retail.mart_customer_rfm WHERE customer_segment = 'Champions'"}
+- {id: st11, difficulty: single_table, question: "List the stock codes of class A products whose revenue return rate is above 20%.",
+   sql: "SELECT stock_code FROM retail.mart_product_performance WHERE abc_class = 'A' AND return_rate_revenue > 0.2"}
+- {id: st12, difficulty: single_table, question: "How many retail customers are based in Germany?",
+   sql: "SELECT count(*) FROM retail.dim_customer WHERE country = 'Germany'"}
+- {id: st13, difficulty: single_table, question: "What is the seasonality profile of the Toys product category?",
+   sql: "SELECT seasonality_profile FROM sales.dim_product_category WHERE product_category = 'Toys'"}
+- {id: st14, difficulty: single_table, question: "How many units of Books were sold on 24 December 2024, and what was the revenue?",
+   sql: "SELECT units_sold, revenue FROM sales.fact_daily_sales WHERE product_category = 'Books' AND event_date = DATE '2024-12-24'"}
+- {id: st15, difficulty: single_table, question: "Which product categories have a 'Steady demand' seasonality profile?",
+   sql: "SELECT product_category FROM sales.dim_product_category WHERE seasonality_profile = 'Steady demand'"}
+
+- {id: ag01, difficulty: aggregation, question: "How many flights did each carrier schedule? Return the carrier code and the number of flights.",
+   sql: "SELECT carrier_code, count(*) AS flights FROM flight.fact_flights GROUP BY carrier_code"}
+- {id: ag02, difficulty: aggregation, question: "How many flights are there for each flight status?",
+   sql: "SELECT flight_status, count(*) AS flights FROM flight.fact_flights GROUP BY flight_status"}
+- {id: ag03, difficulty: aggregation, question: "Count the cancelled flights by cancellation reason.",
+   sql: "SELECT cancellation_reason, count(*) AS flights FROM flight.fact_flights WHERE is_cancelled GROUP BY cancellation_reason"}
+- {id: ag04, difficulty: aggregation, question: "Which 5 origin airports have the most total weather delay minutes? Give the airport code and the total minutes.",
+   sql: "SELECT origin_airport_code, sum(weather_delay_minutes) AS weather_minutes FROM flight.fact_flights GROUP BY 1 ORDER BY 2 DESC LIMIT 5"}
+- {id: ag05, difficulty: aggregation, question: "What is the average arrival delay in minutes for each scheduled departure hour?",
+   sql: "SELECT dep_hour, avg(arr_delay_minutes) AS avg_arr_delay FROM flight.fact_flights GROUP BY dep_hour"}
+- {id: ag06, difficulty: aggregation, question: "What is the fraud rate (share of transactions that are fraudulent, as a fraction) for each channel?",
+   sql: "SELECT channel, avg(is_fraud) AS fraud_rate FROM fraud.fact_transactions GROUP BY channel"}
+- {id: ag07, difficulty: aggregation, question: "What is the total transaction amount for each merchant category?",
+   sql: "SELECT merchant_category, sum(amount) AS total_amount FROM fraud.fact_transactions GROUP BY merchant_category"}
+- {id: ag08, difficulty: aggregation, question: "Which merchant category has the most fraudulent transactions?",
+   sql: "SELECT merchant_category FROM fraud.fact_transactions WHERE is_fraud = 1 GROUP BY 1 ORDER BY count(*) DESC LIMIT 1"}
+- {id: ag09, difficulty: aggregation, question: "What is the average transaction amount for foreign versus domestic transactions?",
+   sql: "SELECT is_foreign_transaction, avg(amount) AS avg_amount FROM fraud.fact_transactions GROUP BY 1"}
+- {id: ag10, difficulty: aggregation, question: "How many retail customers are in each RFM customer segment?",
+   sql: "SELECT customer_segment, count(*) AS customers FROM retail.mart_customer_rfm GROUP BY 1"}
+- {id: ag11, difficulty: aggregation, question: "What is the average monetary value per customer for each customer segment?",
+   sql: "SELECT customer_segment, avg(monetary) AS avg_monetary FROM retail.mart_customer_rfm GROUP BY 1"}
+- {id: ag12, difficulty: aggregation, question: "Which 10 countries have the highest total net revenue in the retail data? Give country and net revenue.",
+   sql: "SELECT country, sum(net_revenue) AS net_revenue FROM retail.mart_monthly_sales_country GROUP BY 1 ORDER BY 2 DESC LIMIT 10"}
+- {id: ag13, difficulty: aggregation, question: "How many retail orders are sales and how many are credit notes?",
+   sql: "SELECT order_type, count(*) AS orders FROM retail.fact_orders GROUP BY 1"}
+- {id: ag14, difficulty: aggregation, question: "What is the total revenue of each product category over the whole sales history?",
+   sql: "SELECT product_category, sum(revenue) AS revenue FROM sales.fact_daily_sales GROUP BY 1"}
+- {id: ag15, difficulty: aggregation, question: "What is the average number of units sold per day for each product category?",
+   sql: "SELECT product_category, avg(units_sold) AS avg_daily_units FROM sales.fact_daily_sales GROUP BY 1"}
+
+- {id: jn01, difficulty: join, question: "For each airline name, how many flights were cancelled?",
+   sql: "SELECT c.carrier_name, sum(CASE WHEN f.is_cancelled THEN 1 ELSE 0 END) AS cancelled FROM flight.fact_flights f JOIN flight.dim_carrier c USING (carrier_code) GROUP BY 1"}
+- {id: jn02, difficulty: join, question: "In which city is the airport with the most departing flights?",
+   sql: "SELECT a.city_name FROM flight.fact_flights f JOIN flight.dim_airport a ON a.airport_code = f.origin_airport_code GROUP BY a.airport_code, a.city_name ORDER BY count(*) DESC LIMIT 1"}
+- {id: jn03, difficulty: join, question: "What is the average arrival delay of flights departing from California airports (state CA), by airline name?",
+   sql: "SELECT c.carrier_name, avg(f.arr_delay_minutes) AS avg_arr_delay FROM flight.fact_flights f JOIN flight.dim_airport a ON a.airport_code = f.origin_airport_code JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code WHERE a.state_code = 'CA' GROUP BY 1"}
+- {id: jn04, difficulty: join, question: "How many flights went from ATL to each airport in Florida (state FL)? Give the destination code and the count.",
+   sql: "SELECT f.dest_airport_code, count(*) AS flights FROM flight.fact_flights f JOIN flight.dim_airport a ON a.airport_code = f.dest_airport_code WHERE f.origin_airport_code = 'ATL' AND a.state_code = 'FL' GROUP BY 1"}
+- {id: jn05, difficulty: join, question: "How many Delta Air Lines flights departed from airports in Texas (state TX)?",
+   sql: "SELECT count(*) FROM flight.fact_flights f JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code JOIN flight.dim_airport a ON a.airport_code = f.origin_airport_code WHERE c.carrier_name = 'Delta Air Lines' AND a.state_code = 'TX'"}
+- {id: jn06, difficulty: join, question: "Which airline names have an average arrival delay above 15 minutes on flights into SFO?",
+   sql: "SELECT c.carrier_name FROM flight.fact_flights f JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code WHERE f.dest_airport_code = 'SFO' GROUP BY 1 HAVING avg(f.arr_delay_minutes) > 15"}
+- {id: jn07, difficulty: join, question: "How many transactions were made by accounts whose home country is Nigeria?",
+   sql: "SELECT count(*) FROM fraud.fact_transactions t JOIN fraud.dim_account a ON a.account_id = t.account_id WHERE a.home_country = 'Nigeria'"}
+- {id: jn08, difficulty: join, question: "For each account home country, how many fraudulent transactions happened in a different country from the home country?",
+   sql: "SELECT a.home_country, count(*) AS fraud_abroad FROM fraud.fact_transactions t JOIN fraud.dim_account a ON a.account_id = t.account_id WHERE t.is_fraud = 1 AND t.transaction_country <> a.home_country GROUP BY 1"}
+- {id: jn09, difficulty: join, question: "What is the average lifetime fraud rate of accounts that made at least one crypto_exchange transaction?",
+   sql: "SELECT avg(lifetime_fraud_rate) FROM fraud.dim_account WHERE account_id IN (SELECT account_id FROM fraud.fact_transactions WHERE merchant_category = 'crypto_exchange')"}
+- {id: jn10, difficulty: join, question: "What is the total net amount of all orders placed by customers in the Lost segment?",
+   sql: "SELECT sum(o.net_amount) FROM retail.fact_orders o JOIN retail.mart_customer_rfm r ON r.customer_id = o.customer_id WHERE r.customer_segment = 'Lost'"}
+- {id: jn11, difficulty: join, question: "What is the average customer tenure in days for each RFM customer segment?",
+   sql: "SELECT r.customer_segment, avg(c.customer_tenure_days) AS avg_tenure_days FROM retail.mart_customer_rfm r JOIN retail.dim_customer c ON c.customer_id = r.customer_id GROUP BY 1"}
+- {id: jn12, difficulty: join, question: "How many sale orders were placed by customers whose first order was in 2011?",
+   sql: "SELECT count(*) FROM retail.fact_orders o JOIN retail.dim_customer c ON c.customer_id = o.customer_id WHERE o.order_type = 'sale' AND year(c.first_order_date) = 2011"}
+- {id: jn13, difficulty: join, question: "What is the total sales revenue for each seasonality profile?",
+   sql: "SELECT d.seasonality_profile, sum(f.revenue) AS revenue FROM sales.fact_daily_sales f JOIN sales.dim_product_category d ON d.category_id = f.category_id GROUP BY 1"}
+- {id: jn14, difficulty: join, question: "For each seasonality profile, what is the average forecast daily units (yhat) in the demand forecast?",
+   sql: "SELECT d.seasonality_profile, avg(f.yhat) AS avg_yhat FROM sales.demand_forecast f JOIN sales.dim_product_category d ON d.product_category = f.product_category GROUP BY 1"}
+- {id: jn15, difficulty: join, question: "What is the total net amount of orders by Champions customers, broken down by the customer's country?",
+   sql: "SELECT c.country, sum(o.net_amount) AS net_amount FROM retail.fact_orders o JOIN retail.mart_customer_rfm r ON r.customer_id = o.customer_id JOIN retail.dim_customer c ON c.customer_id = o.customer_id WHERE r.customer_segment = 'Champions' GROUP BY 1"}
+
+- {id: wn01, difficulty: window, question: "For each month, which carrier code had the most cancelled flights?",
+   sql: "SELECT flight_month, carrier_code FROM (SELECT flight_month, carrier_code, rank() OVER (PARTITION BY flight_month ORDER BY count(*) DESC) AS rk FROM flight.fact_flights WHERE is_cancelled GROUP BY 1, 2) WHERE rk = 1"}
+- {id: wn02, difficulty: window, question: "For each carrier code, which origin airport has the most departures?",
+   sql: "SELECT carrier_code, origin_airport_code FROM (SELECT carrier_code, origin_airport_code, rank() OVER (PARTITION BY carrier_code ORDER BY count(*) DESC) AS rk FROM flight.fact_flights GROUP BY 1, 2) WHERE rk = 1"}
+- {id: wn03, difficulty: window, question: "Rank the airlines by on-time rate from best to worst. Return the airline name and its rank.", order_matters: true,
+   sql: "SELECT carrier_name, rank() OVER (ORDER BY on_time_pct DESC) AS rnk FROM flight.mart_ontime_by_carrier ORDER BY rnk"}
+- {id: wn04, difficulty: window, question: "Show the number of scheduled flights per day in January 2024 together with a 7-day moving average (the day and the 6 days before it), ordered by date.", order_matters: true,
+   sql: "SELECT flight_date, scheduled_flights, avg(scheduled_flights) OVER (ORDER BY flight_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS ma7 FROM flight.mart_ontime_daily WHERE flight_date BETWEEN DATE '2024-01-01' AND DATE '2024-01-31' ORDER BY flight_date"}
+- {id: wn05, difficulty: window, question: "What are the top 3 routes by number of flights for each of the carriers AA, DL and UA?",
+   sql: "SELECT carrier_code, route FROM (SELECT carrier_code, route, row_number() OVER (PARTITION BY carrier_code ORDER BY count(*) DESC) AS rn FROM flight.fact_flights WHERE carrier_code IN ('AA', 'DL', 'UA') GROUP BY 1, 2) WHERE rn <= 3"}
+- {id: wn06, difficulty: window, question: "For each merchant category, give the transaction IDs of its 3 largest transactions by amount.",
+   sql: "SELECT merchant_category, transaction_id FROM (SELECT merchant_category, transaction_id, row_number() OVER (PARTITION BY merchant_category ORDER BY amount DESC) AS rn FROM fraud.fact_transactions) WHERE rn <= 3"}
+- {id: wn07, difficulty: window, question: "Show the number of fraudulent transactions per month in 2025 and the running total, ordered by month.", order_matters: true,
+   sql: "SELECT month(transaction_date) AS m, count(*) AS frauds, sum(count(*)) OVER (ORDER BY month(transaction_date)) AS running_total FROM fraud.fact_transactions WHERE is_fraud = 1 GROUP BY 1 ORDER BY 1"}
+- {id: wn08, difficulty: window, question: "For each channel, which transaction country has the highest fraud rate, considering only country-channel pairs with at least 500 transactions?",
+   sql: "SELECT channel, transaction_country FROM (SELECT channel, transaction_country, rank() OVER (PARTITION BY channel ORDER BY avg(is_fraud) DESC) AS rk FROM fraud.fact_transactions GROUP BY 1, 2 HAVING count(*) >= 500) WHERE rk = 1"}
+- {id: wn09, difficulty: window, question: "Who are the top 2 customers by monetary value in each RFM segment? Give segment and customer ID.",
+   sql: "SELECT customer_segment, customer_id FROM (SELECT customer_segment, customer_id, row_number() OVER (PARTITION BY customer_segment ORDER BY monetary DESC) AS rn FROM retail.mart_customer_rfm) WHERE rn <= 2"}
+- {id: wn10, difficulty: window, question: "For each month, what is the total retail net revenue across all countries and the change from the previous month? Order by month.", order_matters: true,
+   sql: "SELECT sales_month, sum(net_revenue) AS net_revenue, sum(net_revenue) - lag(sum(net_revenue)) OVER (ORDER BY sales_month) AS change FROM retail.mart_monthly_sales_country GROUP BY 1 ORDER BY 1"}
+- {id: wn11, difficulty: window, question: "For each country with at least 20 customers in the RFM table, which customer has the highest monetary value?",
+   sql: "SELECT country, customer_id FROM (SELECT country, customer_id, row_number() OVER (PARTITION BY country ORDER BY monetary DESC) AS rn, count(*) OVER (PARTITION BY country) AS n FROM retail.mart_customer_rfm) WHERE rn = 1 AND n >= 20"}
+- {id: wn12, difficulty: window, question: "For each product category, on which date in 2025 were the most units sold?",
+   sql: "SELECT product_category, event_date FROM (SELECT product_category, event_date, rank() OVER (PARTITION BY product_category ORDER BY units_sold DESC) AS rk FROM sales.fact_daily_sales WHERE year(event_date) = 2025) WHERE rk = 1"}
+- {id: wn13, difficulty: window, question: "Rank the product categories by total 2025 revenue, highest first.", order_matters: true,
+   sql: "SELECT product_category, sum(revenue) AS revenue, rank() OVER (ORDER BY sum(revenue) DESC) AS rnk FROM sales.fact_daily_sales WHERE year(event_date) = 2025 GROUP BY 1 ORDER BY rnk"}
+- {id: wn14, difficulty: window, question: "What share (fraction) of total 2025 revenue did each product category contribute?",
+   sql: "SELECT product_category, sum(revenue) / sum(sum(revenue)) OVER () AS revenue_share FROM sales.fact_daily_sales WHERE year(event_date) = 2025 GROUP BY 1"}
+- {id: wn15, difficulty: window, question: "What are the top 5 class B products by net revenue? Give stock code and net revenue.",
+   sql: "SELECT stock_code, net_revenue FROM retail.mart_product_performance WHERE abc_class = 'B' ORDER BY net_revenue DESC LIMIT 5"}
+
+- {id: dt01, difficulty: date, question: "How many flights were scheduled on weekends (Saturday or Sunday)?",
+   sql: "SELECT count(*) FROM flight.fact_flights WHERE day_of_week IN (6, 7)"}
+- {id: dt02, difficulty: date, question: "How many flights were scheduled in each month?",
+   sql: "SELECT flight_month, count(*) AS flights FROM flight.fact_flights GROUP BY 1"}
+- {id: dt03, difficulty: date, question: "On which date were the most flights cancelled?",
+   sql: "SELECT flight_date FROM flight.fact_flights WHERE is_cancelled GROUP BY 1 ORDER BY count(*) DESC LIMIT 1"}
+- {id: dt04, difficulty: date, question: "What was the average arrival delay of flights between 12 and 18 February 2024 (inclusive)?",
+   sql: "SELECT avg(arr_delay_minutes) FROM flight.fact_flights WHERE flight_date BETWEEN DATE '2024-02-12' AND DATE '2024-02-18'"}
+- {id: dt05, difficulty: date, question: "How many flights were cancelled in the first week of April 2024 (1 to 7 April)?",
+   sql: "SELECT count(*) FROM flight.fact_flights WHERE is_cancelled AND flight_date BETWEEN DATE '2024-04-01' AND DATE '2024-04-07'"}
+- {id: dt06, difficulty: date, question: "How many card transactions happened between midnight and 5 am (hours 0 to 4)?",
+   sql: "SELECT count(*) FROM fraud.fact_transactions WHERE transaction_hour BETWEEN 0 AND 4"}
+- {id: dt07, difficulty: date, question: "How many fraudulent transactions were there in each month of 2025?",
+   sql: "SELECT month(transaction_date) AS m, count(*) AS frauds FROM fraud.fact_transactions WHERE is_fraud = 1 AND year(transaction_date) = 2025 GROUP BY 1"}
+- {id: dt08, difficulty: date, question: "What is the fraud rate (fraction) on weekends versus weekdays?",
+   sql: "SELECT dayofweek(transaction_date) IN (0, 6) AS is_weekend, avg(is_fraud) AS fraud_rate FROM fraud.fact_transactions GROUP BY 1"}
+- {id: dt09, difficulty: date, question: "How many transactions were made from 25 to 31 August 2025?",
+   sql: "SELECT count(*) FROM fraud.fact_transactions WHERE transaction_date BETWEEN DATE '2025-08-25' AND DATE '2025-08-31'"}
+- {id: dt10, difficulty: date, question: "What was the total retail net revenue in Q4 2010 (October to December)?",
+   sql: "SELECT sum(net_revenue) FROM retail.mart_monthly_sales_country WHERE sales_month BETWEEN DATE '2010-10-01' AND DATE '2010-12-01'"}
+- {id: dt11, difficulty: date, question: "How many new retail customers (by first order date) were acquired in each year?",
+   sql: "SELECT year(first_order_date) AS yr, count(*) AS customers FROM retail.dim_customer GROUP BY 1"}
+- {id: dt12, difficulty: date, question: "How many retail sale orders were placed on a Sunday?",
+   sql: "SELECT count(*) FROM retail.fact_orders WHERE order_type = 'sale' AND dayofweek(order_date) = 0"}
+- {id: dt13, difficulty: date, question: "How many units were sold in total in each year?",
+   sql: "SELECT year(event_date) AS yr, sum(units_sold) AS units FROM sales.fact_daily_sales GROUP BY 1"}
+- {id: dt14, difficulty: date, question: "What was the revenue of each product category in December 2024?",
+   sql: "SELECT product_category, sum(revenue) AS revenue FROM sales.fact_daily_sales WHERE event_date BETWEEN DATE '2024-12-01' AND DATE '2024-12-31' GROUP BY 1"}
+- {id: dt15, difficulty: date, question: "What is the total forecast units (sum of yhat) for Toys in February 2026?",
+   sql: "SELECT sum(yhat) FROM sales.demand_forecast WHERE product_category = 'Toys' AND forecast_date BETWEEN DATE '2026-02-01' AND DATE '2026-02-28'"}
+
+- {id: ms01, difficulty: multi_step, question: "Which airlines have a delay rate above the average delay rate of all airlines? Give the airline names.",
+   sql: "SELECT carrier_name FROM flight.mart_ontime_by_carrier WHERE delay_rate > (SELECT avg(delay_rate) FROM flight.mart_ontime_by_carrier)"}
+- {id: ms02, difficulty: multi_step, question: "What percentage (0-100) of all delay minutes in March was caused by late aircraft?",
+   sql: "SELECT 100.0 * sum(CASE WHEN cause = 'Late Aircraft' THEN delay_minutes END) / sum(delay_minutes) FROM flight.mart_delay_causes_by_month WHERE flight_month = 3"}
+- {id: ms03, difficulty: multi_step, question: "Which origin airports with more than 10,000 scheduled flights have a cancellation rate at least 1.5 times the overall cancellation rate of all flights?",
+   sql: "SELECT origin_airport_code FROM flight.fact_flights GROUP BY 1 HAVING count(*) > 10000 AND avg(CASE WHEN is_cancelled THEN 1.0 ELSE 0.0 END) >= 1.5 * (SELECT avg(CASE WHEN is_cancelled THEN 1.0 ELSE 0.0 END) FROM flight.fact_flights)"}
+- {id: ms04, difficulty: multi_step, question: "Across all flights, which delay cause has the largest total delay minutes: carrier, weather, NAS, security or late aircraft?",
+   sql: "SELECT cause FROM flight.mart_delay_causes_by_month GROUP BY cause ORDER BY sum(delay_minutes) DESC LIMIT 1"}
+- {id: ms05, difficulty: multi_step, question: "What fraction of completed flights from JFK to LAX were delayed 15+ minutes, and what fraction of all completed flights out of JFK? Return both numbers.",
+   sql: "SELECT avg(is_delayed_15) FILTER (WHERE dest_airport_code = 'LAX') AS jfk_lax, avg(is_delayed_15) AS all_jfk FROM flight.fact_flights WHERE origin_airport_code = 'JFK'"}
+- {id: ms06, difficulty: multi_step, question: "How many accounts have more than 5 fraudulent transactions, and what is their average lifetime transaction count?",
+   sql: "SELECT count(*) AS accounts, avg(lifetime_txn_count) AS avg_txn FROM fraud.dim_account WHERE lifetime_fraud_count > 5"}
+- {id: ms07, difficulty: multi_step, question: "Which merchant categories have a fraud rate more than twice the overall fraud rate?",
+   sql: "SELECT merchant_category FROM fraud.fact_transactions GROUP BY 1 HAVING avg(is_fraud) > 2 * (SELECT avg(is_fraud) FROM fraud.fact_transactions)"}
+- {id: ms08, difficulty: multi_step, question: "Among accounts with at least one fraudulent transaction, what fraction of all their transactions were fraudulent?",
+   sql: "SELECT avg(is_fraud) FROM fraud.fact_transactions WHERE account_id IN (SELECT account_id FROM fraud.fact_transactions WHERE is_fraud = 1)"}
+- {id: ms09, difficulty: multi_step, question: "What share (fraction) of total customer monetary value comes from the top 100 customers by monetary value?",
+   sql: "SELECT (SELECT sum(monetary) FROM (SELECT monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100)) / sum(monetary) FROM retail.mart_customer_rfm"}
+- {id: ms10, difficulty: multi_step, question: "Which countries had higher retail net revenue in 2011 than in 2010?",
+   sql: "SELECT country FROM retail.mart_monthly_sales_country GROUP BY 1 HAVING sum(CASE WHEN year(sales_month) = 2011 THEN net_revenue ELSE 0 END) > sum(CASE WHEN year(sales_month) = 2010 THEN net_revenue ELSE 0 END)"}
+- {id: ms11, difficulty: multi_step, question: "What is the average net amount per sale order for Champions customers compared with Lost customers?",
+   sql: "SELECT r.customer_segment, avg(o.net_amount) AS avg_order_value FROM retail.fact_orders o JOIN retail.mart_customer_rfm r ON r.customer_id = o.customer_id WHERE o.order_type = 'sale' AND r.customer_segment IN ('Champions', 'Lost') GROUP BY 1"}
+- {id: ms12, difficulty: multi_step, question: "How many class A products have a revenue return rate above the average revenue return rate of all products?",
+   sql: "SELECT count(*) FROM retail.mart_product_performance WHERE abc_class = 'A' AND return_rate_revenue > (SELECT avg(return_rate_revenue) FROM retail.mart_product_performance)"}
+- {id: ms13, difficulty: multi_step, question: "Which product category had the largest increase in total revenue from 2023 to 2025?",
+   sql: "SELECT product_category FROM sales.fact_daily_sales GROUP BY 1 ORDER BY sum(CASE WHEN year(event_date) = 2025 THEN revenue ELSE 0 END) - sum(CASE WHEN year(event_date) = 2023 THEN revenue ELSE 0 END) DESC LIMIT 1"}
+- {id: ms14, difficulty: multi_step, question: "For each product category, compare actual units sold in Q1 2025 with the total forecast units (yhat) for Q1 2026. Return category, actual and forecast.",
+   sql: "SELECT a.product_category, a.actual, f.forecast FROM (SELECT product_category, sum(units_sold) AS actual FROM sales.fact_daily_sales WHERE event_date BETWEEN DATE '2025-01-01' AND DATE '2025-03-31' GROUP BY 1) a JOIN (SELECT product_category, sum(yhat) AS forecast FROM sales.demand_forecast WHERE forecast_date BETWEEN DATE '2026-01-01' AND DATE '2026-03-31' GROUP BY 1) f USING (product_category)"}
+- {id: ms15, difficulty: multi_step, question: "Which month of 2025 had the highest total revenue across all categories, and what was that revenue?",
+   sql: "SELECT month(event_date) AS m, sum(revenue) AS revenue FROM sales.fact_daily_sales WHERE year(event_date) = 2025 GROUP BY 1 ORDER BY 2 DESC LIMIT 1"}
+
+- {id: un01, difficulty: unanswerable, question: "What was the average ticket price on Delta Air Lines flights?", sql: null}
+- {id: un02, difficulty: unanswerable, question: "How many passengers flew out of ATL in March 2024?", sql: null}
+- {id: un03, difficulty: unanswerable, question: "Which pilot flew the most delayed flights?", sql: null}
+- {id: un04, difficulty: unanswerable, question: "What is the average credit score of customers who had a fraudulent transaction?", sql: null}
+- {id: un05, difficulty: unanswerable, question: "Which bank branch processed the most fraudulent transactions?", sql: null}
+- {id: un06, difficulty: unanswerable, question: "What is the gender breakdown of retail customers?", sql: null}
+- {id: un07, difficulty: unanswerable, question: "What was the profit margin of each retail product after cost of goods?", sql: null}
+- {id: un08, difficulty: unanswerable, question: "Which marketing campaign drove the most retail sales?", sql: null}
+- {id: un09, difficulty: unanswerable, question: "Which store location sold the most Toys?", sql: null}
+- {id: un10, difficulty: unanswerable, question: "What was the customer satisfaction score of each product category?", sql: null}

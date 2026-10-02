@@ -1,0 +1,16 @@
+# Environments, caches, local state
+.venv/
+__pycache__/
+.pytest_cache/
+.llm_lock
+*.db
+*.log
+*.out
+results/logs/
+logs/
+.env
+.env.*
+
+# 104 MB warehouse: download it from the GitHub Release (see README)
+data/warehouse.duckdb
+data/*.csv.tmp

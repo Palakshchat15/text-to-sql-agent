@@ -1,0 +1,9 @@
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+port = 8611
+headless = true

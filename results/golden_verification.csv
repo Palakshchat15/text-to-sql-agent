@@ -1,0 +1,101 @@
+id,difficulty,rows,columns,preview
+st01,single_table,1,carrier_name,"[[""JetBlue Airways""]]"
+st02,single_table,5,airport_code,"[[""HNL""], [""ITO""], [""KOA""]]"
+st03,single_table,1,count_star(),[[19814]]
+st04,single_table,9,carrier_name,"[[""Endeavor Air""], [""Delta Air Lines""], [""Allegiant Air""]]"
+st05,single_table,1,count_star(),[[44885]]
+st06,single_table,1,count_star(),[[4]]
+st07,single_table,1,count_star(),[[17]]
+st08,single_table,1,count_star(),[[1499]]
+st09,single_table,1,description,"[[""WHITE HANGING HEART T-LIGHT HOLDER""]]"
+st10,single_table,1,count_star(),[[1260]]
+st11,single_table,9,stock_code,"[[""21108""], [""79323W""], [""79323P""]]"
+st12,single_table,1,count_star(),[[107]]
+st13,single_table,1,seasonality_profile,"[[""Highly seasonal (holiday-driven)""]]"
+st14,single_table,1,units_sold|revenue,"[[494, 7604.91]]"
+st15,single_table,2,product_category,"[[""Beauty""], [""Groceries""]]"
+ag01,aggregation,15,carrier_code|flights,"[[""9E"", 66654], [""OO"", 226049], [""AA"", 315691]]"
+ag02,aggregation,4,flight_status|flights,"[[""Cancelled"", 32546], [""Delayed 15+ min"", 440426], [""Diverted"", 4931]]"
+ag03,aggregation,3,cancellation_reason|flights,"[[""Weather"", 19814], [""Carrier"", 10536], [""National Air System"", 2196]]"
+ag04,aggregation,5,origin_airport_code|weather_minutes,"[[""DFW"", 180315], [""ORD"", 120255], [""DEN"", 77712]]"
+ag05,aggregation,24,dep_hour|avg_arr_delay,"[[0, 6.316268486916951], [1, 11.662416107382551], [2, 6.022508038585209]]"
+ag06,aggregation,4,channel|fraud_rate,"[[""in-store"", 0.0026008265640587148], [""online"", 0.014849116898524656], [""mobile"", 0.011549437636394159]]"
+ag07,aggregation,16,merchant_category|total_amount,"[[""gas_station"", 892660.3900000047], [""home_improvement"", 368681.0999999998], [""clothing"", 603374.7999999996]]"
+ag08,aggregation,1,merchant_category,"[[""online_retail""]]"
+ag09,aggregation,2,is_foreign_transaction|avg_amount,"[[true, 68.42182732240443], [false, 55.92952908815782]]"
+ag10,aggregation,6,customer_segment|customers,"[[""At Risk"", 786], [""Potential Loyalist"", 706], [""Lost"", 1364]]"
+ag11,aggregation,6,customer_segment|avg_monetary,"[[""Others"", 664.6780197300104], [""Champions"", 8995.785472222226], [""Loyal"", 3057.7755394242827]]"
+ag12,aggregation,10,country|net_revenue,"[[""United Kingdom"", 16185468.597], [""EIRE"", 610244.2700000001], [""Netherlands"", 548332.35]]"
+ag13,aggregation,2,order_type|orders,"[[""sale"", 36969], [""credit_note"", 7901]]"
+ag14,aggregation,8,product_category|revenue,"[[""Apparel"", 37555732.49999995], [""Electronics"", 118647800.51000002], [""Sporting Goods"", 18758819.16999998]]"
+ag15,aggregation,8,product_category|avg_daily_units,"[[""Apparel"", 820.3740875912408], [""Electronics"", 604.2518248175182], [""Sporting Goods"", 312.2125912408759]]"
+jn01,join,15,carrier_name|cancelled,"[[""Endeavor Air"", 1111], [""Envoy Air"", 1615], [""Alaska Airlines"", 3507]]"
+jn02,join,1,city_name,"[[""Atlanta, GA""]]"
+jn03,join,12,carrier_name|avg_arr_delay,"[[""JetBlue Airways"", 9.20368119465185], [""Alaska Airlines"", 3.4853732740463377], [""Envoy Air"", -0.03949730700179533]]"
+jn04,join,16,dest_airport_code|flights,"[[""EYW"", 493], [""TLH"", 667], [""PNS"", 743]]"
+jn05,join,1,count_star(),[[13084]]
+jn06,join,8,carrier_name,"[[""JetBlue Airways""], [""Alaska Airlines""], [""United Airlines""]]"
+jn07,join,1,count_star(),[[909]]
+jn08,join,9,home_country|fraud_abroad,"[[""USA"", 457], [""China"", 9], [""France"", 1]]"
+jn09,join,1,avg(lifetime_fraud_rate),[[0.05794819277108435]]
+jn10,join,1,sum(o.net_amount),[[318204.12100000004]]
+jn11,join,6,customer_segment|avg_tenure_days,"[[""Loyal"", 467.92115143929914], [""Others"", 156.2191069574247], [""Champions"", 566.0896825396825]]"
+jn12,join,1,count_star(),[[3979]]
+jn13,join,4,seasonality_profile|revenue,"[[""Highly seasonal (holiday-driven)"", 6540860.099999998], [""Back-to-school / holiday influenced"", 161902358.53999984], [""Steady demand"", 30406883.230000004]]"
+jn14,join,4,seasonality_profile|avg_yhat,"[[""Back-to-school / holiday influenced"", 601.5887307407409], [""Steady demand"", 1156.546791111111], [""Seasonal (weather-driven)"", 449.5941733333333]]"
+jn15,join,22,country|net_amount,"[[""Norway"", 30399.689999999995], [""Denmark"", 19674.3], [""Finland"", 19602.350000000002]]"
+wn01,window,4,flight_month|carrier_code,"[[3, ""WN""], [1, ""UA""], [4, ""AA""]]"
+wn02,window,15,carrier_code|origin_airport_code,"[[""F9"", ""MCO""], [""NK"", ""MCO""], [""B6"", ""BOS""]]"
+wn03,window,15,carrier_name|rnk,"[[""Republic Airways"", 1], [""Endeavor Air"", 2], [""Delta Air Lines"", 3]]"
+wn04,window,31,flight_date|scheduled_flights|ma7,"[[""2024-01-01"", 17265, 17265.0], [""2024-01-02"", 18977, 18121.0], [""2024-01-03"", 18520, 18254.0]]"
+wn05,window,9,carrier_code|route,"[[""AA"", ""LAX-DFW""], [""AA"", ""DFW-LAX""], [""AA"", ""DFW-PHX""]]"
+wn06,window,48,merchant_category|transaction_id,"[[""gas_station"", ""TXN00008317""], [""gas_station"", ""TXN00137981""], [""gas_station"", ""TXN00050764""]]"
+wn07,window,8,m|frauds|running_total,"[[1, 162, 162], [2, 167, 329], [3, 210, 539]]"
+wn08,window,4,channel|transaction_country,"[[""in-store"", ""China""], [""online"", ""Nigeria""], [""atm"", ""Canada""]]"
+wn09,window,12,customer_segment|customer_id,"[[""Loyal"", ""16754""], [""Loyal"", ""13093""], [""At Risk"", ""13902""]]"
+wn10,window,25,sales_month|net_revenue|change,"[[""2009-12-01"", 799847.11, null], [""2010-01-01"", 624032.8919999999, -175814.2180000001], [""2010-02-01"", 532344.286, -91688.60599999991]]"
+wn11,window,8,country|customer_id,"[[""France"", ""12678""], [""Germany"", ""12471""], [""Switzerland"", ""12409""]]"
+wn12,window,8,product_category|event_date,"[[""Beauty"", ""2025-11-28""], [""Toys"", ""2025-11-28""], [""Apparel"", ""2025-11-28""]]"
+wn13,window,8,product_category|revenue|rnk,"[[""Electronics"", 46280757.79999996, 1], [""Apparel"", 13463744.169999994, 2], [""Home & Garden"", 11081246.97, 3]]"
+wn14,window,8,product_category|revenue_share,"[[""Apparel"", 0.14551819720026948], [""Electronics"", 0.5002094777710194], [""Sporting Goods"", 0.07153985434148026]]"
+wn15,window,5,stock_code|net_revenue,"[[""21537"", 4112.96], [""23167"", 4110.82], [""22744"", 4097.01]]"
+dt01,date,1,count_star(),[[609455]]
+dt02,date,4,flight_month|flights,"[[1, 547271], [2, 519221], [3, 591767]]"
+dt03,date,1,flight_date,"[[""2024-01-15""]]"
+dt04,date,1,avg(arr_delay_minutes),[[3.37650054268437]]
+dt05,date,1,count_star(),[[1696]]
+dt06,date,1,count_star(),[[3276]]
+dt07,date,8,m|frauds,"[[1, 162], [2, 167], [3, 210]]"
+dt08,date,2,is_weekend|fraud_rate,"[[false, 0.010123470689784583], [true, 0.009674967174218516]]"
+dt09,date,1,count_star(),[[4399]]
+dt10,date,1,sum(net_revenue),[[3255705.8819999998]]
+dt11,date,4,yr|customers,"[[null, 61], [2009, 955], [2010, 3387]]"
+dt12,date,1,count_star(),[[4748]]
+dt13,date,3,yr|units,"[[2023, 1639207], [2024, 1749493], [2025, 1870222]]"
+dt14,date,8,product_category|revenue,"[[""Apparel"", 1098828.01], [""Electronics"", 4817955.26], [""Sporting Goods"", 785356.7499999999]]"
+dt15,date,1,sum(yhat),[[8250.6454]]
+ms01,multi_step,6,carrier_name,"[[""American Airlines""], [""Alaska Airlines""], [""JetBlue Airways""]]"
+ms02,multi_step,1,((100.0 * sum(CASE  WHEN ((cause = 'Late Aircraft')) THEN (delay_minutes) ELSE NULL END)) / sum(delay_minutes)),[[42.06914672361211]]
+ms03,multi_step,5,origin_airport_code,"[[""MDW""], [""EWR""], [""SEA""]]"
+ms04,multi_step,1,cause,"[[""Late Aircraft""]]"
+ms05,multi_step,1,jfk_lax|all_jfk,"[[0.15506433520290333, 0.19854052645295803]]"
+ms06,multi_step,1,accounts|avg_txn,"[[102, 57.72549019607843]]"
+ms07,multi_step,4,merchant_category,"[[""money_transfer""], [""jewelry""], [""gambling""]]"
+ms08,multi_step,1,avg(is_fraud),[[0.045149242492696]]
+ms09,multi_step,1,((SELECT sum(monetary) FROM (SELECT monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100)) / sum(monetary)),[[0.365901651216536]]
+ms10,multi_step,24,country,"[[""France""], [""Germany""], [""Portugal""]]"
+ms11,multi_step,2,customer_segment|avg_order_value,"[[""Champions"", 537.1095584409668], [""Lost"", 227.22453795966794]]"
+ms12,multi_step,1,count_star(),[[244]]
+ms13,multi_step,1,product_category,"[[""Electronics""]]"
+ms14,multi_step,8,product_category|actual|forecast,"[[""Groceries"", 152757, 156739.113], [""Apparel"", 58197, 64703.56790000001], [""Electronics"", 62223, 71341.8822]]"
+ms15,multi_step,1,m|revenue,"[[12, 9999586.529999988]]"
+un01,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un02,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un03,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un04,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un05,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un06,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un07,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un08,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un09,unanswerable,,,(unanswerable: correct behaviour is a refusal)
+un10,unanswerable,,,(unanswerable: correct behaviour is a refusal)

@@ -1,0 +1,127 @@
+[
+ {
+  "id": "st01",
+  "difficulty": "single_table",
+  "question": "What is the full name of the airline with carrier code B6?",
+  "model": "qwen2.5-coder:7b",
+  "status": "ok",
+  "sql": "SELECT carrier_name FROM flight.dim_carrier WHERE carrier_code = 'B6' LIMIT 1000",
+  "refusal_reason": null,
+  "error": null,
+  "rows_preview": [
+   [
+    "JetBlue Airways"
+   ]
+  ],
+  "n_rows": 1,
+  "summary": "Answer: **JetBlue Airways** (carrier_name).",
+  "chart": {
+   "type": "table"
+  },
+  "n_attempts": 1,
+  "retrieved": [
+   "flight.dim_carrier",
+   "flight.mart_ontime_by_carrier",
+   "flight.mart_delay_causes_by_month",
+   "flight.dim_airport",
+   "flight.fact_flights",
+   "flight.mart_ontime_by_origin",
+   "retail.dim_product"
+  ],
+  "prompt_tokens": 3063,
+  "completion_tokens": 23,
+  "t_llm": 345.5,
+  "t_total": 345.6,
+  "correct": true,
+  "reason": "match"
+ },
+ {
+  "id": "jn03",
+  "difficulty": "join",
+  "question": "What is the average arrival delay of flights departing from California airports (state CA), by airline name?",
+  "model": "qwen2.5-coder:7b",
+  "status": "ok",
+  "sql": "SELECT c.carrier_name, AVG(f.arr_delay_minutes) AS avg_arr_delay_minutes FROM flight.fact_flights AS f JOIN flight.dim_airport AS a ON f.origin_airport_code = a.airport_code JOIN flight.dim_carrier AS c ON f.carrier_code = c.carrier_code WHERE a.state_code = 'CA' GROUP BY c.carrier_name ORDER BY avg_arr_delay_minutes DESC LIMIT 1000",
+  "refusal_reason": null,
+  "error": null,
+  "rows_preview": [
+   [
+    "Frontier Airlines",
+    25.08936419572224
+   ],
+   [
+    "Allegiant Air",
+    13.711880261927035
+   ],
+   [
+    "American Airlines",
+    12.100012718870564
+   ],
+   [
+    "JetBlue Airways",
+    9.20368119465185
+   ],
+   [
+    "Hawaiian Airlines",
+    7.229785290086798
+   ]
+  ],
+  "n_rows": 12,
+  "summary": "12 rows returned. Highest avg_arr_delay_minutes: Frontier Airlines (25.089); lowest: Envoy Air (-0.0395).",
+  "chart": {
+   "type": "bar",
+   "x": "carrier_name",
+   "y": [
+    "avg_arr_delay_minutes"
+   ]
+  },
+  "n_attempts": 2,
+  "retrieved": [
+   "flight.dim_airport",
+   "flight.mart_ontime_by_origin",
+   "flight.mart_top_delayed_routes",
+   "flight.dim_carrier",
+   "flight.mart_ontime_by_dow_month",
+   "flight.mart_ontime_by_carrier",
+   "flight.fact_flights"
+  ],
+  "prompt_tokens": 7472,
+  "completion_tokens": 208,
+  "t_llm": 438.9,
+  "t_total": 439.0,
+  "correct": true,
+  "reason": "match"
+ },
+ {
+  "id": "un01",
+  "difficulty": "unanswerable",
+  "question": "What was the average ticket price on Delta Air Lines flights?",
+  "model": "qwen2.5-coder:7b",
+  "status": "refused",
+  "sql": "SELECT AVG(avg_unit_price) AS avg_ticket_price\nFROM sales.fact_daily_sales\nJOIN flight.dim_carrier ON sales.fact_daily_sales.category_id = flight.dim_carrier.carrier_code\nWHERE flight.dim_carrier.carrier_name = 'Delta Air Lines'",
+  "refusal_reason": "The question combines unrelated schemas (flight, sales); each project's data stands alone, so use tables from one schema only.",
+  "error": "the query combines unrelated schemas (flight, sales); each project's data stands alone, so use tables from one schema only",
+  "rows_preview": [],
+  "n_rows": 0,
+  "summary": "I can't answer this from the warehouse: The question combines unrelated schemas (flight, sales); each project's data stands alone, so use tables from one schema only.",
+  "chart": {
+   "type": "table"
+  },
+  "n_attempts": 2,
+  "retrieved": [
+   "flight.dim_carrier",
+   "flight.mart_delay_causes_by_month",
+   "flight.mart_ontime_by_carrier",
+   "flight.fact_flights",
+   "sales.fact_daily_sales",
+   "flight.mart_ontime_by_hour",
+   "flight.mart_ontime_daily"
+  ],
+  "prompt_tokens": 6939,
+  "completion_tokens": 90,
+  "t_llm": 26.8,
+  "t_total": 26.8,
+  "correct": true,
+  "reason": "correct refusal"
+ }
+]

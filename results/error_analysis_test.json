@@ -1,0 +1,898 @@
+{
+ "full_agent": {
+  "n": 70,
+  "n_wrong": 17,
+  "buckets": {
+   "wrong_table": {
+    "count": 4,
+    "examples": [
+     {
+      "id": "ag05",
+      "question": "What is the average arrival delay in minutes for each scheduled departure hour?",
+      "gold_sql": "SELECT dep_hour, avg(arr_delay_minutes) AS avg_arr_delay FROM flight.fact_flights GROUP BY dep_hour",
+      "pred_sql": "SELECT dep_hour, AVG(avg_arr_delay_minutes) AS avg_arr_delay_by_hour FROM flight.mart_ontime_by_hour GROUP BY dep_hour ORDER BY dep_hour LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 2 (avg_arr_delay)",
+      "error": null
+     },
+     {
+      "id": "jn06",
+      "question": "Which airline names have an average arrival delay above 15 minutes on flights into SFO?",
+      "gold_sql": "SELECT c.carrier_name FROM flight.fact_flights f JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code WHERE f.dest_airport_code = 'SFO' GROUP BY 1 HAVING avg(f.arr_delay_minutes) > 15",
+      "pred_sql": "SELECT c.carrier_name, AVG(f.arr_delay_minutes) AS avg_arr_delay FROM flight.fact_flights AS f JOIN flight.mart_ontime_by_origin AS o ON f.dest_airport_code = o.airport_code JOIN flight.mart_ontime_by_carrier AS c ON f.carrier_code = c.carrier_code WHERE o.airport_code = 'SFO' AND f.arr_delay_minutes > 15 GROUP BY c.carrier_name ORDER BY avg_arr_delay DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 8, predicted 10)",
+      "error": null
+     },
+     {
+      "id": "dt02",
+      "question": "How many flights were scheduled in each month?",
+      "gold_sql": "SELECT flight_month, count(*) AS flights FROM flight.fact_flights GROUP BY 1",
+      "pred_sql": "SELECT flight_month, scheduled_flights FROM flight.mart_ontime_by_dow_month ORDER BY flight_month LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 4, predicted 28)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "ag05",
+     "jn06",
+     "dt02",
+     "ms03"
+    ]
+   },
+   "wrong_aggregation": {
+    "count": 4,
+    "examples": [
+     {
+      "id": "wn01",
+      "question": "For each month, which carrier code had the most cancelled flights?",
+      "gold_sql": "SELECT flight_month, carrier_code FROM (SELECT flight_month, carrier_code, rank() OVER (PARTITION BY flight_month ORDER BY count(*) DESC) AS rk FROM flight.fact_flights WHERE is_cancelled GROUP BY 1, 2) WHERE rk = 1",
+      "pred_sql": "WITH monthly_cancelled_flights AS (SELECT flight_month, carrier_code, SUM(CASE WHEN is_cancelled THEN 1 ELSE 0 END) AS total_cancelled_flights FROM flight.fact_flights GROUP BY flight_month, carrier_code) SELECT flight_month, carrier_code, total_cancelled_flights FROM monthly_cancelled_flights ORDER BY flight_month, total_cancelled_flights DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 4, predicted 60)",
+      "error": null
+     },
+     {
+      "id": "wn12",
+      "question": "For each product category, on which date in 2025 were the most units sold?",
+      "gold_sql": "SELECT product_category, event_date FROM (SELECT product_category, event_date, rank() OVER (PARTITION BY product_category ORDER BY units_sold DESC) AS rk FROM sales.fact_daily_sales WHERE year(event_date) = 2025) WHERE rk = 1",
+      "pred_sql": "SELECT product_category, event_date, MAX(units_sold) AS max_units_sold FROM sales.fact_daily_sales WHERE event_date BETWEEN '2025-01-01' AND '2025-12-31' GROUP BY product_category, event_date ORDER BY product_category, max_units_sold DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 8, predicted 1000)",
+      "error": null
+     },
+     {
+      "id": "wn13",
+      "question": "Rank the product categories by total 2025 revenue, highest first.",
+      "gold_sql": "SELECT product_category, sum(revenue) AS revenue, rank() OVER (ORDER BY sum(revenue) DESC) AS rnk FROM sales.fact_daily_sales WHERE year(event_date) = 2025 GROUP BY 1 ORDER BY rnk",
+      "pred_sql": "SELECT product_category, SUM(revenue) AS total_revenue FROM sales.fact_daily_sales WHERE YEAR(event_date) = 2025 GROUP BY product_category ORDER BY total_revenue DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "too few columns (gold 3, predicted 2)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "wn01",
+     "wn12",
+     "wn13",
+     "ms10"
+    ]
+   },
+   "refusal_false": {
+    "count": 3,
+    "examples": [
+     {
+      "id": "dt01",
+      "question": "How many flights were scheduled on weekends (Saturday or Sunday)?",
+      "gold_sql": "SELECT count(*) FROM flight.fact_flights WHERE day_of_week IN (6, 7)",
+      "pred_sql": "SELECT SUM(scheduled_flights) AS weekend_flights FROM flight.mart_ontime_daily WHERE day_of_week IN (1, 7) LIMIT 1000",
+      "status": "refused",
+      "reason": "refused an answerable question",
+      "error": "Binder Error: Referenced column \"day_of_week\" not found in FROM clause! Candidate bindings: \"delay_rate\", \"delayed_flights\", \"cancellation_rate\" "
+     },
+     {
+      "id": "ms02",
+      "question": "What percentage (0-100) of all delay minutes in March was caused by late aircraft?",
+      "gold_sql": "SELECT 100.0 * sum(CASE WHEN cause = 'Late Aircraft' THEN delay_minutes END) / sum(delay_minutes) FROM flight.mart_delay_causes_by_month WHERE flight_month = 3",
+      "pred_sql": "SELECT (SUM(CASE WHEN flight_month = 3 THEN late_aircraft_delay_minutes ELSE 0 END) / SUM(delay_minutes)) * 100 AS late_aircraft_delay_percentage FROM flight.mart_delay_causes_by_month LIMIT 1000",
+      "status": "refused",
+      "reason": "refused an answerable question",
+      "error": "Binder Error: Referenced column \"late_aircraft_delay_minutes\" not found in FROM clause! Candidate bindings: \"flight_month\" "
+     },
+     {
+      "id": "ms11",
+      "question": "What is the average net amount per sale order for Champions customers compared with Lost customers?",
+      "gold_sql": "SELECT r.customer_segment, avg(o.net_amount) AS avg_order_value FROM retail.fact_orders o JOIN retail.mart_customer_rfm r ON r.customer_id = o.customer_id WHERE o.order_type = 'sale' AND r.customer_segment IN ('Champions', 'Lost') GROUP BY 1",
+      "pred_sql": "SELECT AVG(CASE WHEN customer_segment = 'Champions' THEN net_amount ELSE NULL END) AS avg_net_amount_champions, AVG(CASE WHEN customer_segment = 'Lost' THEN net_amount ELSE NULL END) AS avg_net_amount_lost FROM retail.mart_customer_rfm LIMIT 1000",
+      "status": "refused",
+      "reason": "refused an answerable question",
+      "error": "Binder Error: Referenced column \"net_amount\" not found in FROM clause! Candidate bindings: \"return_rate\", \"customer_segment\", \"total_items_returned\", \"monetary\", \"total_items_purchased\" "
+     }
+    ],
+    "ids": [
+     "dt01",
+     "ms02",
+     "ms11"
+    ]
+   },
+   "refusal_missed": {
+    "count": 3,
+    "examples": [
+     {
+      "id": "un02",
+      "question": "How many passengers flew out of ATL in March 2024?",
+      "gold_sql": null,
+      "pred_sql": "SELECT SUM(fact_flights.completed_flights) AS passengers_flew_out_of_ATL FROM flight.fact_flights JOIN flight.dim_airport ON fact_flights.origin_airport_code = dim_airport.airport_code WHERE dim_airport.airport_code = 'ATL' AND fact_flights.flight_month = 3 AND fact_flights.flight_year = 2024 LIMIT 1000",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Table \"fact_flights\" does not have a column named \"completed_flights\"  Candidate bindings: : \"flight_key\""
+     },
+     {
+      "id": "un07",
+      "question": "What was the profit margin of each retail product after cost of goods?",
+      "gold_sql": null,
+      "pred_sql": "SELECT p.stock_code, p.description, (p.net_revenue - (p.net_revenue / (1 + p.return_rate_revenue))) AS profit_margin FROM retail.dim_product AS p JOIN retail.mart_product_performance AS pm ON p.stock_code = pm.stock_code LIMIT 1000",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Table \"p\" does not have a column named \"return_rate_revenue\"  Candidate bindings: : \"net_revenue\""
+     },
+     {
+      "id": "un09",
+      "question": "Which store location sold the most Toys?",
+      "gold_sql": null,
+      "pred_sql": "SELECT s.customer_segment AS store_location, SUM(s.units_sold) AS total_units_sold FROM sales.fact_daily_sales AS s JOIN sales.dim_product_category AS dpc ON s.category_id = dpc.category_id WHERE dpc.product_category = 'Toys' GROUP BY s.customer_segment ORDER BY total_units_sold DESC LIMIT 1",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Table \"s\" does not have a column named \"customer_segment\"  Candidate bindings: : \"revenue\""
+     }
+    ],
+    "ids": [
+     "un02",
+     "un07",
+     "un09"
+    ]
+   },
+   "wrong_join": {
+    "count": 2,
+    "examples": [
+     {
+      "id": "dt08",
+      "question": "What is the fraud rate (fraction) on weekends versus weekdays?",
+      "gold_sql": "SELECT dayofweek(transaction_date) IN (0, 6) AS is_weekend, avg(is_fraud) AS fraud_rate FROM fraud.fact_transactions GROUP BY 1",
+      "pred_sql": "WITH weekend_fraud AS (SELECT SUM(is_fraud) AS weekend_fraud_count, COUNT(*) AS weekend_transaction_count FROM fraud.fact_transactions WHERE transaction_dow IN (0, 6)), weekday_fraud AS (SELECT SUM(is_fraud) AS weekday_fraud_count, COUNT(*) AS weekday_transaction_count FROM fraud.fact_transactions WHERE transaction_dow BETWEEN 1 AND 5) SELECT (weekend_fraud_count / weekend_transaction_count) AS weekend_fraud_rate, (weekday_fraud_count / weekday_transaction_count) AS weekday_fraud_rate FROM weekend_fraud, weekday_fraud LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 2, predicted 1)",
+      "error": null
+     },
+     {
+      "id": "ms09",
+      "question": "What share (fraction) of total customer monetary value comes from the top 100 customers by monetary value?",
+      "gold_sql": "SELECT (SELECT sum(monetary) FROM (SELECT monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100)) / sum(monetary) FROM retail.mart_customer_rfm",
+      "pred_sql": "WITH top_customers AS (SELECT customer_id, SUM(monetary) AS total_monetary FROM retail.mart_customer_rfm GROUP BY customer_id ORDER BY total_monetary DESC LIMIT 100) SELECT SUM(total_monetary) / SUM(monetary) AS top_100_share FROM retail.mart_customer_rfm JOIN top_customers ON retail.mart_customer_rfm.customer_id = top_customers.customer_id LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (((SELECT sum(monetary) FROM (SELECT monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100)) / sum(monetary)))",
+      "error": null
+     }
+    ],
+    "ids": [
+     "dt08",
+     "ms09"
+    ]
+   },
+   "other_wrong_result": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "wn06",
+      "question": "For each merchant category, give the transaction IDs of its 3 largest transactions by amount.",
+      "gold_sql": "SELECT merchant_category, transaction_id FROM (SELECT merchant_category, transaction_id, row_number() OVER (PARTITION BY merchant_category ORDER BY amount DESC) AS rn FROM fraud.fact_transactions) WHERE rn <= 3",
+      "pred_sql": "SELECT merchant_category, transaction_id, amount FROM fraud.fact_transactions ORDER BY merchant_category, amount DESC LIMIT 3",
+      "status": "ok",
+      "reason": "row count differs (gold 48, predicted 3)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "wn06"
+    ]
+   }
+  }
+ },
+ "full_agent_3b": {
+  "n": 70,
+  "n_wrong": 26,
+  "buckets": {
+   "refusal_false": {
+    "count": 12,
+    "examples": [
+     {
+      "id": "jn02",
+      "question": "In which city is the airport with the most departing flights?",
+      "gold_sql": "SELECT a.city_name FROM flight.fact_flights f JOIN flight.dim_airport a ON a.airport_code = f.origin_airport_code GROUP BY a.airport_code, a.city_name ORDER BY count(*) DESC LIMIT 1",
+      "pred_sql": "SELECT city_name FROM flight.fact_flights GROUP BY city_name ORDER BY COUNT(*) DESC LIMIT 1",
+      "status": "refused",
+      "reason": "refused an answerable question",
+      "error": "Binder Error: Referenced column \"city_name\" not found in FROM clause! Candidate bindings: \"flight_number\", \"tail_number\", \"flight_date\", \"distance_miles\", \"flight_year\" "
+     },
+     {
+      "id": "jn08",
+      "question": "For each account home country, how many fraudulent transactions happened in a different country from the home country?",
+      "gold_sql": "SELECT a.home_country, count(*) AS fraud_abroad FROM fraud.fact_transactions t JOIN fraud.dim_account a ON a.account_id = t.account_id WHERE t.is_fraud = 1 AND t.transaction_country <> a.home_country GROUP BY 1",
+      "pred_sql": "SELECT home_country, COUNT(*) AS fraudulent_transactions_outside_home_country FROM fraud.fact_transactions WHERE is_foreign_transaction = TRUE GROUP BY home_country ORDER BY fraudulent_transactions_outside_home_country DESC LIMIT 1000",
+      "status": "refused",
+      "reason": "refused an answerable question",
+      "error": "Binder Error: Referenced column \"home_country\" not found in FROM clause! Candidate bindings: \"amount\", \"merchant_category\", \"transaction_country\", \"transaction_hour\", \"account_id\" "
+     },
+     {
+      "id": "jn09",
+      "question": "What is the average lifetime fraud rate of accounts that made at least one crypto_exchange transaction?",
+      "gold_sql": "SELECT avg(lifetime_fraud_rate) FROM fraud.dim_account WHERE account_id IN (SELECT account_id FROM fraud.fact_transactions WHERE merchant_category = 'crypto_exchange')",
+      "pred_sql": "SELECT AVG(lifetime_fraud_rate) AS avg_lifetime_fraud_rate FROM fraud.fact_transactions WHERE merchant_category = 'crypto_exchange' LIMIT 1000",
+      "status": "refused",
+      "reason": "refused an answerable question",
+      "error": "Binder Error: Referenced column \"lifetime_fraud_rate\" not found in FROM clause! Candidate bindings: \"is_fraud\", \"is_foreign_transaction\", \"customer_id\", \"merchant_category\", \"transaction_datetime\" "
+     }
+    ],
+    "ids": [
+     "jn02",
+     "jn08",
+     "jn09",
+     "jn11",
+     "jn13",
+     "wn04",
+     "dt05",
+     "dt08",
+     "ms02",
+     "ms03",
+     "ms09",
+     "ms10"
+    ]
+   },
+   "wrong_aggregation": {
+    "count": 6,
+    "examples": [
+     {
+      "id": "ag13",
+      "question": "How many retail orders are sales and how many are credit notes?",
+      "gold_sql": "SELECT order_type, count(*) AS orders FROM retail.fact_orders GROUP BY 1",
+      "pred_sql": "SELECT COUNT(*) AS total_orders, SUM(CASE WHEN order_type = 'sale' THEN 1 ELSE 0 END) AS sales_orders, SUM(CASE WHEN order_type = 'credit_note' THEN 1 ELSE 0 END) AS credit_note_orders FROM retail.fact_orders LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 2, predicted 1)",
+      "error": null
+     },
+     {
+      "id": "wn01",
+      "question": "For each month, which carrier code had the most cancelled flights?",
+      "gold_sql": "SELECT flight_month, carrier_code FROM (SELECT flight_month, carrier_code, rank() OVER (PARTITION BY flight_month ORDER BY count(*) DESC) AS rk FROM flight.fact_flights WHERE is_cancelled GROUP BY 1, 2) WHERE rk = 1",
+      "pred_sql": "SELECT flight_month, carrier_code, COUNT(*) AS cancelled_flights FROM flight.fact_flights WHERE is_cancelled = TRUE GROUP BY flight_month, carrier_code ORDER BY cancelled_flights DESC LIMIT 1",
+      "status": "ok",
+      "reason": "row count differs (gold 4, predicted 1)",
+      "error": null
+     },
+     {
+      "id": "wn07",
+      "question": "Show the number of fraudulent transactions per month in 2025 and the running total, ordered by month.",
+      "gold_sql": "SELECT month(transaction_date) AS m, count(*) AS frauds, sum(count(*)) OVER (ORDER BY month(transaction_date)) AS running_total FROM fraud.fact_transactions WHERE is_fraud = 1 GROUP BY 1 ORDER BY 1",
+      "pred_sql": "WITH monthly_fraud AS (SELECT EXTRACT(YEAR FROM transaction_datetime) AS year, EXTRACT(MONTH FROM transaction_datetime) AS month, COUNT(*) AS fraud_count FROM fraud.fact_transactions WHERE EXTRACT(YEAR FROM transaction_datetime) = 2025 GROUP BY year, month) SELECT month, SUM(fraud_count) OVER (ORDER BY month) AS running_total_fraud FROM monthly_fraud ORDER BY month LIMIT 1000",
+      "status": "ok",
+      "reason": "too few columns (gold 3, predicted 2)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "ag13",
+     "wn01",
+     "wn07",
+     "wn13",
+     "dt07",
+     "ms13"
+    ]
+   },
+   "wrong_table": {
+    "count": 3,
+    "examples": [
+     {
+      "id": "jn06",
+      "question": "Which airline names have an average arrival delay above 15 minutes on flights into SFO?",
+      "gold_sql": "SELECT c.carrier_name FROM flight.fact_flights f JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code WHERE f.dest_airport_code = 'SFO' GROUP BY 1 HAVING avg(f.arr_delay_minutes) > 15",
+      "pred_sql": "SELECT carrier_name FROM flight.mart_ontime_by_carrier WHERE avg_arr_delay_minutes > 15 ORDER BY avg_arr_delay_minutes DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 8, predicted 1)",
+      "error": null
+     },
+     {
+      "id": "jn07",
+      "question": "How many transactions were made by accounts whose home country is Nigeria?",
+      "gold_sql": "SELECT count(*) FROM fraud.fact_transactions t JOIN fraud.dim_account a ON a.account_id = t.account_id WHERE a.home_country = 'Nigeria'",
+      "pred_sql": "SELECT COUNT(*) AS transaction_count FROM fraud.dim_account WHERE home_country = 'Nigeria' LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (count_star())",
+      "error": null
+     },
+     {
+      "id": "dt02",
+      "question": "How many flights were scheduled in each month?",
+      "gold_sql": "SELECT flight_month, count(*) AS flights FROM flight.fact_flights GROUP BY 1",
+      "pred_sql": "SELECT flight_month, COUNT(*) AS scheduled_flights FROM flight.mart_ontime_by_dow_month GROUP BY flight_month ORDER BY flight_month LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 2 (flights)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "jn06",
+     "jn07",
+     "dt02"
+    ]
+   },
+   "refusal_missed": {
+    "count": 2,
+    "examples": [
+     {
+      "id": "un03",
+      "question": "Which pilot flew the most delayed flights?",
+      "gold_sql": null,
+      "pred_sql": "SELECT tail_number, COUNT(*) AS delayed_flight_count FROM flight.fact_flights WHERE dep_delay_minutes >= 15 GROUP BY tail_number ORDER BY delayed_flight_count DESC LIMIT 1",
+      "status": "ok",
+      "reason": "should refuse, got ok",
+      "error": null
+     },
+     {
+      "id": "un07",
+      "question": "What was the profit margin of each retail product after cost of goods?",
+      "gold_sql": null,
+      "pred_sql": "SELECT stock_code, description, (net_revenue - quantity_sold * cost_of_goods) AS profit_margin FROM retail.mart_product_performance JOIN retail.dim_product ON retail.mart_product_performance.stock_code = retail.dim_product.stock_code LIMIT 1000",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Ambiguous reference to column name \"stock_code\" (use: \"mart_product_performance.stock_code\" or \"dim_product.stock_code\")  LINE 1: SELECT stock_code, description, (net_revenue - quantity_sold *..."
+     }
+    ],
+    "ids": [
+     "un03",
+     "un07"
+    ]
+   },
+   "other_wrong_result": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "wn06",
+      "question": "For each merchant category, give the transaction IDs of its 3 largest transactions by amount.",
+      "gold_sql": "SELECT merchant_category, transaction_id FROM (SELECT merchant_category, transaction_id, row_number() OVER (PARTITION BY merchant_category ORDER BY amount DESC) AS rn FROM fraud.fact_transactions) WHERE rn <= 3",
+      "pred_sql": "WITH TopTransactions AS (SELECT merchant_category, transaction_id, amount FROM fraud.fact_transactions ORDER BY merchant_category, amount DESC LIMIT 3) SELECT merchant_category, transaction_id, amount FROM TopTransactions ORDER BY merchant_category, amount DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 48, predicted 3)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "wn06"
+    ]
+   },
+   "hallucinated_column": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "ms01",
+      "question": "Which airlines have a delay rate above the average delay rate of all airlines? Give the airline names.",
+      "gold_sql": "SELECT carrier_name FROM flight.mart_ontime_by_carrier WHERE delay_rate > (SELECT avg(delay_rate) FROM flight.mart_ontime_by_carrier)",
+      "pred_sql": "SELECT carrier_name FROM flight.dim_carrier WHERE delay_rate > (SELECT AVG(delay_rate) FROM flight.dim_carrier) LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: Referenced column \"delay_rate\" not found in FROM clause! Candidate bindings: \"carrier_name\", \"scheduled_fl)",
+      "error": "Binder Error: Referenced column \"delay_rate\" not found in FROM clause! Candidate bindings: \"carrier_name\", \"scheduled_flights\", \"carrier_code\" "
+     }
+    ],
+    "ids": [
+     "ms01"
+    ]
+   },
+   "wrong_join": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "ms11",
+      "question": "What is the average net amount per sale order for Champions customers compared with Lost customers?",
+      "gold_sql": "SELECT r.customer_segment, avg(o.net_amount) AS avg_order_value FROM retail.fact_orders o JOIN retail.mart_customer_rfm r ON r.customer_id = o.customer_id WHERE o.order_type = 'sale' AND r.customer_segment IN ('Champions', 'Lost') GROUP BY 1",
+      "pred_sql": "SELECT AVG(f.net_amount) AS avg_net_amount_champions, AVG(f.net_amount) AS avg_net_amount_lost FROM retail.fact_orders AS f JOIN retail.mart_customer_rfm AS cr ON f.customer_id = cr.customer_id WHERE cr.customer_segment = 'Champions' UNION ALL SELECT AVG(f.net_amount) AS avg_net_amount_champions, AVG(f.net_amount) AS avg_net_amount_lost FROM retail.fact_orders AS f JOIN retail.mart_customer_rfm AS cr ON f.customer_id = cr.customer_id WHERE cr.customer_segment = 'Lost' LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (customer_segment)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "ms11"
+    ]
+   }
+  }
+ },
+ "oracle_tables_upper": {
+  "n": 70,
+  "n_wrong": 11,
+  "buckets": {
+   "wrong_aggregation": {
+    "count": 8,
+    "examples": [
+     {
+      "id": "jn06",
+      "question": "Which airline names have an average arrival delay above 15 minutes on flights into SFO?",
+      "gold_sql": "SELECT c.carrier_name FROM flight.fact_flights f JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code WHERE f.dest_airport_code = 'SFO' GROUP BY 1 HAVING avg(f.arr_delay_minutes) > 15",
+      "pred_sql": "SELECT c.carrier_name, AVG(f.arr_delay_minutes) AS avg_arr_delay FROM flight.fact_flights AS f JOIN flight.dim_carrier AS c ON f.carrier_code = c.carrier_code WHERE f.dest_airport_code = 'SFO' AND f.arr_delay_minutes > 15 GROUP BY c.carrier_name ORDER BY avg_arr_delay DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 8, predicted 10)",
+      "error": null
+     },
+     {
+      "id": "wn07",
+      "question": "Show the number of fraudulent transactions per month in 2025 and the running total, ordered by month.",
+      "gold_sql": "SELECT month(transaction_date) AS m, count(*) AS frauds, sum(count(*)) OVER (ORDER BY month(transaction_date)) AS running_total FROM fraud.fact_transactions WHERE is_fraud = 1 GROUP BY 1 ORDER BY 1",
+      "pred_sql": "WITH monthly_fraud AS (SELECT DATE_TRUNC('MONTH', transaction_datetime) AS month, COUNT(*) AS fraudulent_transactions FROM fraud.fact_transactions WHERE is_fraud = 1 AND YEAR(transaction_datetime) = 2025 GROUP BY month) SELECT month, fraudulent_transactions, SUM(fraudulent_transactions) OVER (ORDER BY month) AS running_total FROM monthly_fraud ORDER BY month LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (m)",
+      "error": null
+     },
+     {
+      "id": "wn12",
+      "question": "For each product category, on which date in 2025 were the most units sold?",
+      "gold_sql": "SELECT product_category, event_date FROM (SELECT product_category, event_date, rank() OVER (PARTITION BY product_category ORDER BY units_sold DESC) AS rk FROM sales.fact_daily_sales WHERE year(event_date) = 2025) WHERE rk = 1",
+      "pred_sql": "SELECT product_category, event_date, MAX(units_sold) AS max_units_sold FROM sales.fact_daily_sales WHERE YEAR(event_date) = 2025 GROUP BY product_category, event_date ORDER BY product_category, max_units_sold DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 8, predicted 1000)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "jn06",
+     "wn07",
+     "wn12",
+     "wn13",
+     "dt08",
+     "ms03",
+     "ms10",
+     "ms11"
+    ]
+   },
+   "refusal_missed": {
+    "count": 2,
+    "examples": [
+     {
+      "id": "un02",
+      "question": "How many passengers flew out of ATL in March 2024?",
+      "gold_sql": null,
+      "pred_sql": "SELECT SUM(fact_flights.completed_flights) AS passengers_flew_out_of_ATL FROM flight.fact_flights JOIN flight.dim_airport ON fact_flights.origin_airport_code = dim_airport.airport_code WHERE dim_airport.airport_code = 'ATL' AND fact_flights.flight_month = 3 AND fact_flights.flight_year = 2024 LIMIT 1000",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Table \"fact_flights\" does not have a column named \"completed_flights\"  Candidate bindings: : \"flight_key\""
+     },
+     {
+      "id": "un09",
+      "question": "Which store location sold the most Toys?",
+      "gold_sql": null,
+      "pred_sql": "SELECT s.customer_segment AS store_location, SUM(s.units_sold) AS total_units_sold FROM sales.fact_daily_sales AS s JOIN sales.dim_product_category AS dpc ON s.category_id = dpc.category_id WHERE dpc.product_category = 'Toys' GROUP BY s.customer_segment ORDER BY total_units_sold DESC LIMIT 1",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Table \"s\" does not have a column named \"customer_segment\"  Candidate bindings: : \"revenue\""
+     }
+    ],
+    "ids": [
+     "un02",
+     "un09"
+    ]
+   },
+   "sql_error_other": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "ms09",
+      "question": "What share (fraction) of total customer monetary value comes from the top 100 customers by monetary value?",
+      "gold_sql": "SELECT (SELECT sum(monetary) FROM (SELECT monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100)) / sum(monetary) FROM retail.mart_customer_rfm",
+      "pred_sql": "WITH top_customers AS (SELECT SUM(monetary) AS top_100_monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100), total_customers AS (SELECT SUM(monetary) AS total_monetary FROM retail.mart_customer_rfm) SELECT top_100_monetary / total_monetary AS share_top_100 FROM top_customers, total_customers LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: column \"monetary\" must appear in the GROUP BY clause or must be part of an aggregate function. Either add )",
+      "error": "Binder Error: column \"monetary\" must appear in the GROUP BY clause or must be part of an aggregate function. Either add it to the GROUP BY list, or use \"ANY_VALUE(monetary)\" if the exact value of \"monetary\" is not important. "
+     }
+    ],
+    "ids": [
+     "ms09"
+    ]
+   }
+  }
+ },
+ "retrieval_docs": {
+  "n": 70,
+  "n_wrong": 19,
+  "buckets": {
+   "hallucinated_column": {
+    "count": 7,
+    "examples": [
+     {
+      "id": "jn01",
+      "question": "For each airline name, how many flights were cancelled?",
+      "gold_sql": "SELECT c.carrier_name, sum(CASE WHEN f.is_cancelled THEN 1 ELSE 0 END) AS cancelled FROM flight.fact_flights f JOIN flight.dim_carrier c USING (carrier_code) GROUP BY 1",
+      "pred_sql": "SELECT f.carrier_name, SUM(f.cancelled_flights) AS total_cancelled_flights FROM flight.dim_carrier AS f JOIN flight.mart_ontime_by_carrier AS m ON f.carrier_code = m.carrier_code GROUP BY f.carrier_name LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: Table \"f\" does not have a column named \"cancelled_flights\"  Candidate bindings: : \"scheduled_flights\")",
+      "error": "Binder Error: Table \"f\" does not have a column named \"cancelled_flights\"  Candidate bindings: : \"scheduled_flights\""
+     },
+     {
+      "id": "jn06",
+      "question": "Which airline names have an average arrival delay above 15 minutes on flights into SFO?",
+      "gold_sql": "SELECT c.carrier_name FROM flight.fact_flights f JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code WHERE f.dest_airport_code = 'SFO' GROUP BY 1 HAVING avg(f.arr_delay_minutes) > 15",
+      "pred_sql": "SELECT f.carrier_name, AVG(f.arr_delay_minutes) AS avg_arr_delay FROM flight.fact_flights AS f JOIN flight.mart_ontime_by_origin AS o ON f.dest_airport_code = o.airport_code JOIN flight.mart_ontime_by_carrier AS c ON f.carrier_code = c.carrier_code WHERE o.airport_code = 'SFO' AND f.arr_delay_minutes > 15 GROUP BY f.carrier_name ORDER BY avg_arr_delay DESC LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: Table \"f\" does not have a column named \"carrier_name\"  Candidate bindings: : \"carrier_code\")",
+      "error": "Binder Error: Table \"f\" does not have a column named \"carrier_name\"  Candidate bindings: : \"carrier_code\""
+     },
+     {
+      "id": "wn01",
+      "question": "For each month, which carrier code had the most cancelled flights?",
+      "gold_sql": "SELECT flight_month, carrier_code FROM (SELECT flight_month, carrier_code, rank() OVER (PARTITION BY flight_month ORDER BY count(*) DESC) AS rk FROM flight.fact_flights WHERE is_cancelled GROUP BY 1, 2) WHERE rk = 1",
+      "pred_sql": "WITH monthly_cancelled_flights AS (SELECT flight_month, carrier_code, SUM(cancelled_flights) AS total_cancelled_flights FROM flight.fact_flights GROUP BY flight_month, carrier_code) SELECT flight_month, carrier_code, total_cancelled_flights FROM monthly_cancelled_flights ORDER BY flight_month, total_cancelled_flights DESC LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: Referenced column \"cancelled_flights\" not found in FROM clause! Candidate bindings: \"cancellation_reason\",)",
+      "error": "Binder Error: Referenced column \"cancelled_flights\" not found in FROM clause! Candidate bindings: \"cancellation_reason\", \"is_cancelled\", \"carrier_delay_minutes\", \"distance_miles\", \"dep_delay_minutes\" "
+     }
+    ],
+    "ids": [
+     "jn01",
+     "jn06",
+     "wn01",
+     "dt01",
+     "dt05",
+     "ms02",
+     "ms11"
+    ]
+   },
+   "wrong_table": {
+    "count": 3,
+    "examples": [
+     {
+      "id": "ag05",
+      "question": "What is the average arrival delay in minutes for each scheduled departure hour?",
+      "gold_sql": "SELECT dep_hour, avg(arr_delay_minutes) AS avg_arr_delay FROM flight.fact_flights GROUP BY dep_hour",
+      "pred_sql": "SELECT dep_hour, AVG(avg_arr_delay_minutes) AS avg_arr_delay_by_hour FROM flight.mart_ontime_by_hour GROUP BY dep_hour ORDER BY dep_hour LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 2 (avg_arr_delay)",
+      "error": null
+     },
+     {
+      "id": "dt02",
+      "question": "How many flights were scheduled in each month?",
+      "gold_sql": "SELECT flight_month, count(*) AS flights FROM flight.fact_flights GROUP BY 1",
+      "pred_sql": "SELECT flight_month, scheduled_flights FROM flight.mart_ontime_by_dow_month ORDER BY flight_month LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 4, predicted 28)",
+      "error": null
+     },
+     {
+      "id": "ms03",
+      "question": "Which origin airports with more than 10,000 scheduled flights have a cancellation rate at least 1.5 times the overall cancellation rate of all flights?",
+      "gold_sql": "SELECT origin_airport_code FROM flight.fact_flights GROUP BY 1 HAVING count(*) > 10000 AND avg(CASE WHEN is_cancelled THEN 1.0 ELSE 0.0 END) >= 1.5 * (SELECT avg(CASE WHEN is_cancelled THEN 1.0 ELSE 0.0 END) FROM flight.fact_flights)",
+      "pred_sql": "WITH overall_cancellation_rate AS (SELECT AVG(cancellation_rate) AS avg_cancellation_rate FROM flight.mart_ontime_by_origin) SELECT airport_code, airport_name, cancellation_rate FROM flight.mart_ontime_by_origin WHERE scheduled_flights > 10000 AND cancellation_rate >= 1.5 * (SELECT avg_cancellation_rate FROM overall_cancellation_rate) ORDER BY cancellation_rate DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 5, predicted 0)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "ag05",
+     "dt02",
+     "ms03"
+    ]
+   },
+   "refusal_missed": {
+    "count": 3,
+    "examples": [
+     {
+      "id": "un02",
+      "question": "How many passengers flew out of ATL in March 2024?",
+      "gold_sql": null,
+      "pred_sql": "SELECT SUM(fact_flights.completed_flights) AS passengers_flew_out_of_ATL FROM flight.fact_flights JOIN flight.dim_airport ON fact_flights.origin_airport_code = dim_airport.airport_code WHERE dim_airport.airport_code = 'ATL' AND fact_flights.flight_month = 3 AND fact_flights.flight_year = 2024 LIMIT 1000",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Table \"fact_flights\" does not have a column named \"completed_flights\"  Candidate bindings: : \"flight_key\""
+     },
+     {
+      "id": "un07",
+      "question": "What was the profit margin of each retail product after cost of goods?",
+      "gold_sql": null,
+      "pred_sql": "SELECT p.stock_code, p.description, (p.net_revenue - (p.net_revenue / (1 + p.return_rate_revenue))) AS profit_margin FROM retail.dim_product AS p JOIN retail.mart_product_performance AS pm ON p.stock_code = pm.stock_code LIMIT 1000",
+      "status": "error",
+      "reason": "should refuse, got error",
+      "error": "Binder Error: Table \"p\" does not have a column named \"return_rate_revenue\"  Candidate bindings: : \"net_revenue\""
+     },
+     {
+      "id": "un09",
+      "question": "Which store location sold the most Toys?",
+      "gold_sql": null,
+      "pred_sql": "SELECT \n    r.customer_segment AS store_location,\n    SUM(s.units_sold) AS total_units_sold\nFROM \n    sales.fact_daily_sales s\nJOIN \n    sales.dim_product_category dpc ON s.category_id = dpc.category_id\nJOIN \n    retail.mart_customer_rfm r ON s.customer_id = r.customer_id\nWHERE \n    dpc.product_category = 'Toys'\nGROUP BY \n    r.customer_segment\nORDER BY \n    total_units_sold DESC\nLIMIT 1",
+      "status": "blocked",
+      "reason": "should refuse, got blocked",
+      "error": "the query combines unrelated schemas (retail, sales); each project's data stands alone, so use tables from one schema only"
+     }
+    ],
+    "ids": [
+     "un02",
+     "un07",
+     "un09"
+    ]
+   },
+   "wrong_aggregation": {
+    "count": 2,
+    "examples": [
+     {
+      "id": "wn12",
+      "question": "For each product category, on which date in 2025 were the most units sold?",
+      "gold_sql": "SELECT product_category, event_date FROM (SELECT product_category, event_date, rank() OVER (PARTITION BY product_category ORDER BY units_sold DESC) AS rk FROM sales.fact_daily_sales WHERE year(event_date) = 2025) WHERE rk = 1",
+      "pred_sql": "SELECT product_category, event_date, MAX(units_sold) AS max_units_sold FROM sales.fact_daily_sales WHERE event_date BETWEEN '2025-01-01' AND '2025-12-31' GROUP BY product_category, event_date ORDER BY product_category, max_units_sold DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 8, predicted 1000)",
+      "error": null
+     },
+     {
+      "id": "wn13",
+      "question": "Rank the product categories by total 2025 revenue, highest first.",
+      "gold_sql": "SELECT product_category, sum(revenue) AS revenue, rank() OVER (ORDER BY sum(revenue) DESC) AS rnk FROM sales.fact_daily_sales WHERE year(event_date) = 2025 GROUP BY 1 ORDER BY rnk",
+      "pred_sql": "SELECT product_category, SUM(revenue) AS total_revenue FROM sales.fact_daily_sales WHERE YEAR(event_date) = 2025 GROUP BY product_category ORDER BY total_revenue DESC LIMIT 1000",
+      "status": "ok",
+      "reason": "too few columns (gold 3, predicted 2)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "wn12",
+     "wn13"
+    ]
+   },
+   "wrong_join": {
+    "count": 2,
+    "examples": [
+     {
+      "id": "dt08",
+      "question": "What is the fraud rate (fraction) on weekends versus weekdays?",
+      "gold_sql": "SELECT dayofweek(transaction_date) IN (0, 6) AS is_weekend, avg(is_fraud) AS fraud_rate FROM fraud.fact_transactions GROUP BY 1",
+      "pred_sql": "WITH weekend_fraud AS (SELECT SUM(is_fraud) AS weekend_fraud_count, COUNT(*) AS weekend_transaction_count FROM fraud.fact_transactions WHERE transaction_dow IN (0, 6)), weekday_fraud AS (SELECT SUM(is_fraud) AS weekday_fraud_count, COUNT(*) AS weekday_transaction_count FROM fraud.fact_transactions WHERE transaction_dow BETWEEN 1 AND 5) SELECT (weekend_fraud_count / weekend_transaction_count) AS weekend_fraud_rate, (weekday_fraud_count / weekday_transaction_count) AS weekday_fraud_rate FROM weekend_fraud, weekday_fraud LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 2, predicted 1)",
+      "error": null
+     },
+     {
+      "id": "ms09",
+      "question": "What share (fraction) of total customer monetary value comes from the top 100 customers by monetary value?",
+      "gold_sql": "SELECT (SELECT sum(monetary) FROM (SELECT monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100)) / sum(monetary) FROM retail.mart_customer_rfm",
+      "pred_sql": "WITH top_customers AS (SELECT customer_id, SUM(monetary) AS total_monetary FROM retail.mart_customer_rfm GROUP BY customer_id ORDER BY total_monetary DESC LIMIT 100) SELECT SUM(total_monetary) / SUM(monetary) AS top_100_share FROM retail.mart_customer_rfm JOIN top_customers ON retail.mart_customer_rfm.customer_id = top_customers.customer_id LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (((SELECT sum(monetary) FROM (SELECT monetary FROM retail.mart_customer_rfm ORDER BY monetary DESC LIMIT 100)) / sum(monetary)))",
+      "error": null
+     }
+    ],
+    "ids": [
+     "dt08",
+     "ms09"
+    ]
+   },
+   "other_wrong_result": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "wn06",
+      "question": "For each merchant category, give the transaction IDs of its 3 largest transactions by amount.",
+      "gold_sql": "SELECT merchant_category, transaction_id FROM (SELECT merchant_category, transaction_id, row_number() OVER (PARTITION BY merchant_category ORDER BY amount DESC) AS rn FROM fraud.fact_transactions) WHERE rn <= 3",
+      "pred_sql": "SELECT merchant_category, transaction_id, amount FROM fraud.fact_transactions ORDER BY merchant_category, amount DESC LIMIT 3",
+      "status": "ok",
+      "reason": "row count differs (gold 48, predicted 3)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "wn06"
+    ]
+   },
+   "sql_error_other": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "ms10",
+      "question": "Which countries had higher retail net revenue in 2011 than in 2010?",
+      "gold_sql": "SELECT country FROM retail.mart_monthly_sales_country GROUP BY 1 HAVING sum(CASE WHEN year(sales_month) = 2011 THEN net_revenue ELSE 0 END) > sum(CASE WHEN year(sales_month) = 2010 THEN net_revenue ELSE 0 END)",
+      "pred_sql": "SELECT country FROM retail.mart_monthly_sales_country WHERE EXTRACT(YEAR FROM sales_month) = 2011 GROUP BY country HAVING SUM(net_revenue) > (SELECT SUM(net_revenue) FROM retail.mart_monthly_sales_country WHERE EXTRACT(YEAR FROM sales_month) = 2010 GROUP BY country) LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Invalid Input Error: More than one row returned by a subquery used as an expression - scalar subqueries can only return )",
+      "error": "Invalid Input Error: More than one row returned by a subquery used as an expression - scalar subqueries can only return a single row.  Use \"SET scalar_subquery_error_on_multiple_rows=false\" to revert to previous behavior of returning a random row."
+     }
+    ],
+    "ids": [
+     "ms10"
+    ]
+   }
+  }
+ },
+ "zero_shot_full": {
+  "n": 70,
+  "n_wrong": 23,
+  "buckets": {
+   "wrong_aggregation": {
+    "count": 8,
+    "examples": [
+     {
+      "id": "st08",
+      "question": "How many card transactions were fraudulent?",
+      "gold_sql": "SELECT count(*) FROM fraud.fact_transactions WHERE is_fraud = 1",
+      "pred_sql": "SELECT SUM(is_fraud) AS fraudulent_transactions FROM fraud.fact_transactions WHERE channel = 'card' LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (count_star())",
+      "error": null
+     },
+     {
+      "id": "ag13",
+      "question": "How many retail orders are sales and how many are credit notes?",
+      "gold_sql": "SELECT order_type, count(*) AS orders FROM retail.fact_orders GROUP BY 1",
+      "pred_sql": "SELECT SUM(CASE WHEN order_type = 'Sale' THEN 1 ELSE 0 END) AS sales_orders, SUM(CASE WHEN order_type = 'Credit Note' THEN 1 ELSE 0 END) AS credit_notes FROM retail.fact_orders LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 2, predicted 1)",
+      "error": null
+     },
+     {
+      "id": "wn07",
+      "question": "Show the number of fraudulent transactions per month in 2025 and the running total, ordered by month.",
+      "gold_sql": "SELECT month(transaction_date) AS m, count(*) AS frauds, sum(count(*)) OVER (ORDER BY month(transaction_date)) AS running_total FROM fraud.fact_transactions WHERE is_fraud = 1 GROUP BY 1 ORDER BY 1",
+      "pred_sql": "WITH monthly_fraud AS (SELECT DATE_TRUNC('MONTH', transaction_date) AS month, COUNT(*) AS fraud_count FROM fraud.fact_transactions WHERE is_fraud = 1 AND YEAR(transaction_date) = 2025 GROUP BY month) SELECT month, fraud_count, SUM(fraud_count) OVER (ORDER BY month) AS running_total FROM monthly_fraud ORDER BY month LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (m)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "st08",
+     "ag13",
+     "wn07",
+     "wn10",
+     "wn12",
+     "wn13",
+     "dt07",
+     "dt08"
+    ]
+   },
+   "hallucinated_column": {
+    "count": 8,
+    "examples": [
+     {
+      "id": "ag12",
+      "question": "Which 10 countries have the highest total net revenue in the retail data? Give country and net revenue.",
+      "gold_sql": "SELECT country, sum(net_revenue) AS net_revenue FROM retail.mart_monthly_sales_country GROUP BY 1 ORDER BY 2 DESC LIMIT 10",
+      "pred_sql": "SELECT country, SUM(net_revenue) AS total_net_revenue FROM retail.fact_orders GROUP BY country ORDER BY total_net_revenue DESC LIMIT 10",
+      "status": "error",
+      "reason": "no result (error: Binder Error: Referenced column \"net_revenue\" not found in FROM clause! Candidate bindings: \"items_returned\", \"net_amoun)",
+      "error": "Binder Error: Referenced column \"net_revenue\" not found in FROM clause! Candidate bindings: \"items_returned\", \"net_amount\", \"return_amount\", \"order_type\", \"country\" "
+     },
+     {
+      "id": "jn01",
+      "question": "For each airline name, how many flights were cancelled?",
+      "gold_sql": "SELECT c.carrier_name, sum(CASE WHEN f.is_cancelled THEN 1 ELSE 0 END) AS cancelled FROM flight.fact_flights f JOIN flight.dim_carrier c USING (carrier_code) GROUP BY 1",
+      "pred_sql": "SELECT f.carrier_name, COUNT(f.flight_key) AS cancelled_flights FROM flight.dim_carrier AS f JOIN flight.fact_flights AS ff ON f.carrier_code = ff.carrier_code WHERE ff.is_cancelled = TRUE GROUP BY f.carrier_name LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: Table \"f\" does not have a column named \"flight_key\"  Candidate bindings: : \"carrier_code\")",
+      "error": "Binder Error: Table \"f\" does not have a column named \"flight_key\"  Candidate bindings: : \"carrier_code\""
+     },
+     {
+      "id": "jn06",
+      "question": "Which airline names have an average arrival delay above 15 minutes on flights into SFO?",
+      "gold_sql": "SELECT c.carrier_name FROM flight.fact_flights f JOIN flight.dim_carrier c ON c.carrier_code = f.carrier_code WHERE f.dest_airport_code = 'SFO' GROUP BY 1 HAVING avg(f.arr_delay_minutes) > 15",
+      "pred_sql": "SELECT f.carrier_name, AVG(f.arr_delay_minutes) AS avg_arr_delay_minutes FROM flight.fact_flights AS f JOIN flight.dim_airport AS a ON f.dest_airport_code = a.airport_code JOIN flight.dim_carrier AS c ON f.carrier_code = c.carrier_code WHERE a.airport_code = 'SFO' GROUP BY f.carrier_name HAVING AVG(f.arr_delay_minutes) > 15 LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: Table \"f\" does not have a column named \"carrier_name\"  Candidate bindings: : \"carrier_code\")",
+      "error": "Binder Error: Table \"f\" does not have a column named \"carrier_name\"  Candidate bindings: : \"carrier_code\""
+     }
+    ],
+    "ids": [
+     "ag12",
+     "jn01",
+     "jn06",
+     "wn04",
+     "dt02",
+     "dt10",
+     "ms03",
+     "ms14"
+    ]
+   },
+   "other_wrong_result": {
+    "count": 3,
+    "examples": [
+     {
+      "id": "st06",
+      "question": "How many ATM-channel transactions had an amount above 1,000?",
+      "gold_sql": "SELECT count(*) FROM fraud.fact_transactions WHERE channel = 'atm' AND amount > 1000",
+      "pred_sql": "SELECT COUNT(*) AS atm_transactions_above_1000 FROM fraud.fact_transactions WHERE channel = 'ATM' AND amount > 1000 LIMIT 1000",
+      "status": "ok",
+      "reason": "no predicted column matches gold column 1 (count_star())",
+      "error": null
+     },
+     {
+      "id": "wn06",
+      "question": "For each merchant category, give the transaction IDs of its 3 largest transactions by amount.",
+      "gold_sql": "SELECT merchant_category, transaction_id FROM (SELECT merchant_category, transaction_id, row_number() OVER (PARTITION BY merchant_category ORDER BY amount DESC) AS rn FROM fraud.fact_transactions) WHERE rn <= 3",
+      "pred_sql": "SELECT merchant_category, transaction_id, amount FROM fraud.fact_transactions ORDER BY merchant_category, amount DESC LIMIT 3",
+      "status": "ok",
+      "reason": "row count differs (gold 48, predicted 3)",
+      "error": null
+     },
+     {
+      "id": "ms04",
+      "question": "Across all flights, which delay cause has the largest total delay minutes: carrier, weather, NAS, security or late aircraft?",
+      "gold_sql": "SELECT cause FROM flight.mart_delay_causes_by_month GROUP BY cause ORDER BY sum(delay_minutes) DESC LIMIT 1",
+      "pred_sql": "SELECT cause, SUM(delay_minutes) AS total_delay_minutes FROM flight.mart_delay_causes_by_month WHERE cause IN ('carrier', 'weather', 'NAS', 'security', 'late aircraft') GROUP BY cause ORDER BY total_delay_minutes DESC LIMIT 1",
+      "status": "ok",
+      "reason": "row count differs (gold 1, predicted 0)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "st06",
+     "wn06",
+     "ms04"
+    ]
+   },
+   "wrong_table": {
+    "count": 2,
+    "examples": [
+     {
+      "id": "ms10",
+      "question": "Which countries had higher retail net revenue in 2011 than in 2010?",
+      "gold_sql": "SELECT country FROM retail.mart_monthly_sales_country GROUP BY 1 HAVING sum(CASE WHEN year(sales_month) = 2011 THEN net_revenue ELSE 0 END) > sum(CASE WHEN year(sales_month) = 2010 THEN net_revenue ELSE 0 END)",
+      "pred_sql": "SELECT DISTINCT country FROM retail.fact_orders WHERE EXTRACT(YEAR FROM order_date) = 2011 AND country IN (SELECT DISTINCT country FROM retail.fact_orders WHERE EXTRACT(YEAR FROM order_date) = 2010) AND net_amount > (SELECT AVG(net_amount) FROM retail.fact_orders WHERE EXTRACT(YEAR FROM order_date) = 2010 AND country = retail.fact_orders.country) LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 24, predicted 32)",
+      "error": null
+     },
+     {
+      "id": "ms11",
+      "question": "What is the average net amount per sale order for Champions customers compared with Lost customers?",
+      "gold_sql": "SELECT r.customer_segment, avg(o.net_amount) AS avg_order_value FROM retail.fact_orders o JOIN retail.mart_customer_rfm r ON r.customer_id = o.customer_id WHERE o.order_type = 'sale' AND r.customer_segment IN ('Champions', 'Lost') GROUP BY 1",
+      "pred_sql": "SELECT AVG(CASE WHEN rfm.customer_segment = 'Champions' THEN ro.net_amount ELSE NULL END) AS avg_net_amount_champions, AVG(CASE WHEN rfm.customer_segment = 'Lost' THEN ro.net_amount ELSE NULL END) AS avg_net_amount_lost FROM retail.dim_customer AS dc JOIN retail.mart_customer_rfm AS rfm ON dc.customer_id = rfm.customer_id JOIN retail.fact_orders AS ro ON dc.customer_id = ro.customer_id WHERE ro.is_sale_order = TRUE LIMIT 1000",
+      "status": "ok",
+      "reason": "row count differs (gold 2, predicted 1)",
+      "error": null
+     }
+    ],
+    "ids": [
+     "ms10",
+     "ms11"
+    ]
+   },
+   "sql_error_other": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "wn14",
+      "question": "What share (fraction) of total 2025 revenue did each product category contribute?",
+      "gold_sql": "SELECT product_category, sum(revenue) / sum(sum(revenue)) OVER () AS revenue_share FROM sales.fact_daily_sales WHERE year(event_date) = 2025 GROUP BY 1",
+      "pred_sql": "WITH total_revenue AS (SELECT SUM(revenue) AS total_revenue FROM sales.fact_daily_sales WHERE YEAR(event_date) = 2025) SELECT product_category, SUM(revenue) AS category_revenue, SUM(revenue) / total_revenue.total_revenue AS revenue_share FROM sales.fact_daily_sales JOIN total_revenue ON 1 = 1 WHERE YEAR(event_date) = 2025 GROUP BY product_category ORDER BY revenue_share DESC LIMIT 1000",
+      "status": "error",
+      "reason": "no result (error: Binder Error: column \"total_revenue\" must appear in the GROUP BY clause or must be part of an aggregate function. Either)",
+      "error": "Binder Error: column \"total_revenue\" must appear in the GROUP BY clause or must be part of an aggregate function. Either add it to the GROUP BY list, or use \"ANY_VALUE(total_revenue)\" if the exact value of \"total_revenue\" is not important. "
+     }
+    ],
+    "ids": [
+     "wn14"
+    ]
+   },
+   "refusal_missed": {
+    "count": 1,
+    "examples": [
+     {
+      "id": "un02",
+      "question": "How many passengers flew out of ATL in March 2024?",
+      "gold_sql": null,
+      "pred_sql": "SELECT COUNT(*) AS passengers_flew_out_of_atl FROM flight.fact_flights JOIN flight.dim_airport ON flight.fact_flights.origin_airport_code = flight.dim_airport.airport_code WHERE flight.dim_airport.airport_code = 'ATL' AND flight.fact_flights.flight_month = 3 AND flight.fact_flights.flight_year = 2024 LIMIT 1000",
+      "status": "ok",
+      "reason": "should refuse, got ok",
+      "error": null
+     }
+    ],
+    "ids": [
+     "un02"
+    ]
+   }
+  }
+ }
+}

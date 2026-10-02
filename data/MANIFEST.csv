@@ -1,0 +1,23 @@
+schema,table,rows,columns,source,exported_at
+flight,dim_airport,335,6,postgres warehouse.dim_airport,2026-10-01T03:26:14
+flight,dim_carrier,15,3,postgres warehouse.dim_carrier,2026-10-01T03:26:14
+flight,fact_flights,2240444,27,postgres warehouse.fact_flights,2026-10-01T03:26:18
+flight,mart_delay_causes_by_month,20,4,postgres warehouse.mart_delay_causes_by_month,2026-10-01T03:26:18
+flight,mart_ontime_by_carrier,15,11,postgres warehouse.mart_ontime_by_carrier,2026-10-01T03:26:18
+flight,mart_ontime_by_dow_month,28,13,postgres warehouse.mart_ontime_by_dow_month,2026-10-01T03:26:18
+flight,mart_ontime_by_hour,24,10,postgres warehouse.mart_ontime_by_hour,2026-10-01T03:26:18
+flight,mart_ontime_by_origin,335,15,postgres warehouse.mart_ontime_by_origin,2026-10-01T03:26:18
+flight,mart_ontime_daily,121,10,postgres warehouse.mart_ontime_daily,2026-10-01T03:26:18
+flight,mart_top_delayed_routes,1400,13,postgres warehouse.mart_top_delayed_routes,2026-10-01T03:26:18
+fraud,dim_account,3000,12,postgres warehouse.dim_account,2026-10-01T03:26:25
+fraud,fact_transactions,149995,13,postgres warehouse.fact_transactions,2026-10-01T03:26:25
+retail,dim_customer,5939,5,postgres warehouse.dim_customer,2026-10-01T03:26:34
+retail,dim_product,5049,4,postgres warehouse.dim_product,2026-10-01T03:26:34
+retail,fact_orders,44870,14,postgres warehouse.fact_orders,2026-10-01T03:26:34
+retail,mart_customer_rfm,5878,15,postgres warehouse.mart_customer_rfm,2026-10-01T03:26:35
+retail,mart_monthly_sales_country,594,8,postgres warehouse.mart_monthly_sales_country,2026-10-01T03:26:35
+retail,mart_product_performance,4705,13,postgres warehouse.mart_product_performance,2026-10-01T03:26:35
+sales,demand_forecast,720,9,postgres warehouse.demand_forecast,2026-10-01T03:26:42
+sales,dim_product_category,8,3,postgres warehouse.dim_product_category,2026-10-01T03:26:42
+sales,fact_daily_sales,8768,10,postgres warehouse.fact_daily_sales,2026-10-01T03:26:42
+sales,mart_category_daily_sales,8768,9,postgres warehouse.mart_category_daily_sales,2026-10-01T03:26:42

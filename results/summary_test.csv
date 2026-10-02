@@ -1,0 +1,6 @@
+config,model,n_done,n_split,complete,overall_acc,exec_acc_answerable,refusal_acc_unanswerable,false_refusals,no_result,avg_attempts,guard_blocks,items_with_guard_block,latency_p50_s,latency_p95_s,mean_prompt_tokens,mean_completion_tokens
+full_agent,qwen2.5-coder:7b,70,70,True,0.757,0.778,0.571,3,0,1.29,1,1,14.0,58.6,4575,83
+full_agent_3b,qwen2.5-coder:3b,70,70,True,0.629,0.619,0.714,12,1,1.31,3,3,2.2,7.4,4647,78
+oracle_tables_upper,qwen2.5-coder:7b,70,70,True,0.843,0.857,0.714,0,1,1.17,1,1,10.0,43.6,1632,78
+retrieval_docs,qwen2.5-coder:7b,70,70,True,0.729,0.746,0.571,0,8,1,1,1,13.9,34.2,3495,61
+zero_shot_full,qwen2.5-coder:7b,70,70,True,0.671,0.651,0.857,0,9,1,0,0,10.2,27.5,1809,58
