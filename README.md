@@ -202,10 +202,12 @@ The 17 full_agent errors, with real examples:
   (an average of averages) instead of `avg(arr_delay_minutes)` over `fact_flights`.
 - **Wrong aggregation (4):** mostly "top item per group" questions answered without a window function.
   wn01 "for each month, which carrier had the most cancelled flights?" returned all 60 month-carrier counts
-  instead of the 4 winners; wn12 grouped by date and returned 1,000 rows instead of one date per category.
-- **False refusal (3):** not the model declining, but the agent giving up: after 3 attempts the query still
-  failed (e.g. dt01 used `day_of_week` on a daily mart that lacks it; ms02 invented
-  `late_aircraft_delay_minutes`), so the answer was "cannot answer".
+  instead of the 4 winners; wn12 grouped by category and date and returned 1,000 rows instead of one date
+  per category.
+- **False refusal (3):** each started with a missing-column error (dt01 used `day_of_week` on a daily mart
+  that lacks it; ms02 invented `late_aircraft_delay_minutes`; ms11 used `net_amount`). On the retry, the
+  model answered `CANNOT_ANSWER` instead of fixing the column, so all three ended after 2 attempts. Part of
+  the "hallucinated column 7 to 0" drop therefore became false refusals rather than correct answers.
 - **Missed refusal (3):** the model forced an answer from a nearby column. un02 "how many passengers flew out
   of ATL?" summed `completed_flights`; un07 "profit margin after cost of goods" built a formula from
   `net_revenue` and `return_rate_revenue`. Both then failed to execute, so no wrong number was shown, but the
